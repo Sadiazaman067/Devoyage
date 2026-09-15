@@ -1,6 +1,6 @@
 # Devoyage
 
-**A personalized roadmap generator for CS freshman.**
+**A personalized roadmap generator for CS freshmen students — Built by CS students, for the freshmen we used to be.**
 
 CS freshmen trying to break into tech face a flood of contradictory guidance: grind
 LeetCode, get certifications, build projects, do research, use AI, avoid AI. There's
@@ -16,28 +16,41 @@ short structured intake (under 5 minutes), and gets:
   the moment, and why. Nobody online tells students what to drop. We do.
 - **Progress tracking** across the semester
 
-Built by CS students, for the freshmen we used to be.
+
 
 ## Status
 
-🚧 **In active development** (CSC 317 group project, Fall 2026). Currently building
-Tier 1: accounts, intake, roadmap generation, progress tracking.
+🚧 **In active development** (CSC 317 group project, Fall 2026). Currently in Phase 1:
+accounts, intake, and the database layer.
 
-## Tech Stack
+## Tech
 
-React · FastAPI (Python) · Supabase (Postgres) · Anthropic Claude
+Python · Kivy (UI) · SQLite · Pydantic · Anthropic Claude · pytest
+
+Desktop application, MVC architecture. Run instructions will land here once Phase 1 integrates.
 
 ## Team
 
 | | |
 |---|---|
-| Sadia Zaman | Team lead · Database |
-| Arnav Karn | Backend |
-| Oluwatamilore Bamidele-Sanni | Frontend |
-| Sugam Parajuli | Testing / QA |
+| Oluwatamilore (Tami) Bamidele-Sanni | Team lead · Frontend (Kivy views, Figma) |
+| Arnav Karn | Backend (controllers + AI service) |
+| Sugam Parajuli | Backend (controllers + AI service) |
+| Sadia Zaman | Database (models) · Config |
+
+## Repository layout
+main.py # app entry point (ScreenManager)
+config.ini # app settings (configparser)
+models/ # database access — Sadia
+views/ # Kivy screens + .kv layouts — Tami
+controllers/ # logic between views and models — Arnav + Sugam
+services/ # AI generation (Anthropic SDK) — Arnav + Sugam
+tests/ # p
+
 
 ## Contributing (team)
 
 **Read [PROJECT_SPEC.md](PROJECT_SPEC.md) before writing any code or asking any AI
-tool for help.** It is the source of truth for names, data shapes, and interfaces.
-`main` is always working; branch per feature, PR before merge.
+tool for help.** It is the source of truth for names, data shapes, and function
+signatures. `main` is always working; branch per feature, PR before merge; `.env`
+is never committed.
