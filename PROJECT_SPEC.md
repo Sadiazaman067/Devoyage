@@ -30,6 +30,8 @@ Decided:
 - (09/15) CONFIRMED BY PROFESSOR: API calls to an AI agent are permitted, so the Anthropic SDK is approved.
 - (09/15) Stack: one Python application, MVC pattern (course requirement). UI: Kivy + KV language, multi-page via ScreenManager. Validation: Pydantic. Database: SQLite via built-in sqlite3. Settings: .ini file via built-in configparser (course requirement). AI: Anthropic Python SDK. Tests: pytest.
 - (09/15) Leadership: Sadia handed team lead to Tami.
+- (09/29) Branch integration checklist added to Working Agreements.
+
 - No hosting/deployment: this is a desktop app, submitted with run instructions per the course outline.
 
 Open (fill in as decided, with date):
@@ -210,3 +212,10 @@ Specced here before building, same pattern: model additions -> contract addition
 - This file changes only by team agreement. The Decision Log gets a dated line every time something is decided, including in group chat.
 - Stuck for more than an hour: post in the group chat with what you tried. Do not silently rewrite someone else's area to unblock yourself.
 - Grade-driven discipline (documentation and process are over half the rubric): meeting minutes for EVERY meeting, submitted every 2 weeks (15% of grade, lead tracks this); individual journals updated at every milestone (graded separately); the Figma design document is worth 20% and gets real time, not leftovers.
+
+~~ Branch Integration Checklist ~~
+- Before opening a PR, diff your branch's file tree against the devoyage/ layout in this spec (main.py, config.ini, models/, views/, controllers/, services/ai.py, tests/) and move anything that's drifted. Right now: Sadia moves her DB files from the repo root into models/ before that branch is reviewed.
+- Rebase onto current main immediately before requesting review — don't review a branch that's fallen behind.
+- Reviewer approval covers structure compliance, not just correctness: a PR that doesn't match the layout above gets requested changes, not an approve.
+- README update stays in the same PR as the code (already agreed) — no follow-up PR for docs.
+- If two open branches both touch file layout, whichever merges first sets it; the second person rebases onto that instead of re-arguing structure in review.
