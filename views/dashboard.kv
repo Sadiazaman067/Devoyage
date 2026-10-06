@@ -7,9 +7,11 @@
 # Every color comes from views/theme.py (theme.C.<name>). Kivy's default
 # label color is white, so every label here sets its color explicitly.
 #
-# Names starting with "Dash" are dynamic classes (made with @, no Python
-# class). KV class names are global across all loaded .kv files, so the
-# prefix keeps them from colliding with intake.kv's FieldLabel etc.
+# Names starting with "Dash" are small reusable pieces. KV class names are
+# global across all loaded .kv files, so the prefix keeps them from
+# colliding with intake.kv's FieldLabel etc. Two are dynamic classes made
+# with @ (DashLabel, DashNotNowFrame); the rest have a Python class in
+# dashboard.py because they have their own properties (see the note there).
 
 
 # =========================================================================
@@ -27,9 +29,8 @@
     height: self.texture_size[1]       # ...and be exactly as tall as the wrapped text
 
 # Small rounded badge: est_time, "Up next", "Done", the current nav item.
-<DashPill@Label>:
+<DashPill>:
     fill: theme.C.chip_bg
-    shown: True              # Kivy has no "hidden": False collapses it to zero width
     color: theme.C.text_muted
     font_size: "12sp"
     bold: True
@@ -47,9 +48,8 @@
 
 # Rounded button. background_normal "" turns off Kivy's default grey image;
 # the pill shape is drawn in canvas.before instead.
-<DashPillButton@Button>:
+<DashPillButton>:
     fill: theme.C.accent
-    pad_x: dp(48)            # total horizontal padding around the text
     outline: theme.C.clear
     color: theme.C.on_accent
     disabled_color: self.color
@@ -77,7 +77,7 @@
             width: dp(1.2)
 
 # White card with a thin border (loading and error states).
-<DashCardFrame@BoxLayout>:
+<DashCardFrame>:
     frame_fill: theme.C.surface
     frame_line: theme.C.border
     frame_line_width: dp(1)
@@ -117,8 +117,7 @@
             dash_length: dp(6)
             dash_offset: dp(4)
 
-<DashProgressBar@Widget>:
-    value: 0        # 0.0 to 1.0
+<DashProgressBar>:
     canvas:
         Color:
             rgba: theme.C.border
@@ -133,7 +132,7 @@
             size: self.width * self.value, self.height
             radius: [self.height / 2]
 
-<DashSkeletonBar@Widget>:
+<DashSkeletonBar>:
     fill: theme.C.skeleton_bar
     size_hint_y: None
     canvas:
@@ -145,7 +144,7 @@
             radius: [dp(8)]
 
 # Grey placeholder shaped like a step card, shown while generating.
-<DashSkeletonCard@DashCardFrame>:
+<DashSkeletonCard>:
     title_share: 0.6
     line_share: 0.85
     orientation: "vertical"
@@ -406,10 +405,14 @@
                     height: self.minimum_height
                     spacing: dp(16)
 
-            # Right: not now (340dp wide; full width when stacked)
+            # Right: not now (340dp wide; full width when stacked).
+            # size_hint_x stays None and the width itself depends on
+            # root.stacked: a constant `width: dp(340)` is applied only once,
+            # so after flipping from stacked to side-by-side it would keep
+            # the stale stacked width.
             DashNotNowFrame:
-                size_hint_x: 1 if root.stacked else None
-                width: dp(340)
+                size_hint_x: None
+                width: self.parent.width if root.stacked else dp(340)
                 pos_hint: {"top": 1}
                 BoxLayout:
                     orientation: "vertical"
@@ -491,8 +494,8 @@
                 title_share: 0.55
                 line_share: 0.7
         DashNotNowFrame:
-            size_hint_x: 1 if root.stacked else None
-            width: dp(340)
+            size_hint_x: None
+            width: self.parent.width if root.stacked else dp(340)
             spacing: dp(12)
             pos_hint: {"top": 1}
             DashSkeletonBar:

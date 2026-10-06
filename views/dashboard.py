@@ -26,13 +26,17 @@ from functools import partial
 from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.logger import Logger
+from kivy.metrics import dp
 from kivy.properties import (
     BooleanProperty,
+    ColorProperty,
     NumericProperty,
     ObjectProperty,
     StringProperty,
 )
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
@@ -58,6 +62,48 @@ from views.dashboard_helpers import (
 )
 
 Builder.load_file(os.path.join(os.path.dirname(__file__), "dashboard.kv"))
+
+
+# ---------------------------------------------------------------------------
+# Reusable pieces with their own properties (look: the matching <Dash...>
+# rules in dashboard.kv).
+#
+# Why these are Python classes and not KV-only `<DashPill@Label>` dynamic
+# classes: a property invented inside a dynamic class starts out as None,
+# and Kivy builds the canvas BEFORE the rule assigns the real value. So
+# `Color: rgba: self.fill` received None and crashed. Declaring the
+# property here gives it a type and a safe default from the start; the
+# KV rule then sets the real theme color.
+# ---------------------------------------------------------------------------
+
+class DashPill(Label):
+    fill = ColorProperty((0, 0, 0, 0))
+    shown = BooleanProperty(True)  # Kivy has no "hidden": False collapses it to zero width
+
+
+class DashPillButton(Button):
+    fill = ColorProperty((0, 0, 0, 0))
+    outline = ColorProperty((0, 0, 0, 0))
+    pad_x = NumericProperty(dp(48))  # total horizontal padding around the text
+
+
+class DashCardFrame(BoxLayout):
+    frame_fill = ColorProperty((0, 0, 0, 0))
+    frame_line = ColorProperty((0, 0, 0, 0))
+    frame_line_width = NumericProperty(1)
+
+
+class DashSkeletonCard(DashCardFrame):
+    title_share = NumericProperty(0.6)  # width of the fake title bar, as a fraction
+    line_share = NumericProperty(0.85)
+
+
+class DashProgressBar(Widget):
+    value = NumericProperty(0)  # 0.0 to 1.0
+
+
+class DashSkeletonBar(Widget):
+    fill = ColorProperty((0, 0, 0, 0))
 
 
 # ---------------------------------------------------------------------------
