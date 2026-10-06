@@ -143,4 +143,5 @@ class IntakeScreen(Screen):
             return
 
         self.ids.error_label.text = ""
+        self.manager.get_screen("dashboard").current_user_id = self.current_user_id
         self.manager.current = "dashboard"
