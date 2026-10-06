@@ -1,0 +1,33 @@
+<LandingScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: 48
+        spacing: 20
+
+        Label:
+            text: "Devoyage"
+            font_size: "40sp"
+            bold: True
+            size_hint_y: None
+            height: "56dp"
+
+        Label:
+            text: "A semester-scale roadmap, built around where you actually are."
+            font_size: "16sp"
+            size_hint_y: None
+            height: "40dp"
+
+        Widget:
+            # spacer pushes the buttons toward the bottom half of the screen
+
+        Button:
+            text: "Create account"
+            size_hint_y: None
+            height: "48dp"
+            on_press: root.go_to_signup()
+
+        Button:
+            text: "Log in"
+            size_hint_y: None
+            height: "48dp"
+            on_press: root.go_to_login()

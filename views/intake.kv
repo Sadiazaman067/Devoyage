@@ -1,0 +1,378 @@
+#:import utils kivy.utils
+#:import theme views.theme
+
+<SectionHeading@Label>:
+    bold: True
+    font_size: "18sp"
+    size_hint_y: None
+    height: "34dp"
+    halign: "left"
+    valign: "middle"
+    text_size: self.width, None
+
+<FieldLabel@Label>:
+    size_hint_y: None
+    height: "24dp"
+    halign: "left"
+    valign: "middle"
+    text_size: self.width, None
+
+<CheckRow@BoxLayout>:
+    size_hint_y: None
+    height: "34dp"
+    spacing: 8
+
+<IntakeScreen>:
+    BoxLayout:
+        orientation: "vertical"
+
+        Label:
+            text: "Tell us where you're starting"
+            font_size: "24sp"
+            bold: True
+            size_hint_y: None
+            height: "56dp"
+
+        Label:
+            text: "Six quick sections, mostly taps and clicks -- takes about 5 minutes."
+            font_size: "13sp"
+            color: theme.C.form_subtitle
+            size_hint_y: None
+            height: "22dp"
+
+        ScrollView:
+            do_scroll_x: False
+
+            BoxLayout:
+                id: form_box
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                padding: 24
+                spacing: 22
+
+                # ---- Section 1: Where you are ----
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 6
+
+                    SectionHeading:
+                        text: "1. Where you are"
+
+                    FieldLabel:
+                        text: "Year"
+                    Spinner:
+                        id: year_spinner
+                        text: "Sophomore"
+                        values: ["Freshman", "Sophomore", "Junior", "Senior"]
+                        size_hint_y: None
+                        height: "40dp"
+
+                    FieldLabel:
+                        text: "Major status"
+                    Spinner:
+                        id: major_status_spinner
+                        text: "Declared CS"
+                        values: ["Declared CS", "Intending, not declared", "Deciding between majors"]
+                        size_hint_y: None
+                        height: "40dp"
+
+                    FieldLabel:
+                        text: "Does your school have a big tech recruiting pipeline?"
+                    Spinner:
+                        id: pipeline_spinner
+                        text: "Not sure"
+                        values: ["Yes", "No", "Not sure"]
+                        size_hint_y: None
+                        height: "40dp"
+
+                # ---- Section 2: Coursework ----
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 6
+
+                    SectionHeading:
+                        text: "2. Coursework"
+                    FieldLabel:
+                        text: "Check everything completed or currently in progress."
+                        color: theme.C.form_hint
+
+                    CheckRow:
+                        CheckBox:
+                            id: cw_intro
+                            size_hint_x: None
+                            width: "32dp"
+                        FieldLabel:
+                            text: "Intro programming"
+                    CheckRow:
+                        CheckBox:
+                            id: cw_oop
+                            size_hint_x: None
+                            width: "32dp"
+                        FieldLabel:
+                            text: "Second course / OOP"
+                    CheckRow:
+                        CheckBox:
+                            id: cw_dsa
+                            size_hint_x: None
+                            width: "32dp"
+                        FieldLabel:
+                            text: "Data structures"
+                    CheckRow:
+                        CheckBox:
+                            id: cw_none
+                            size_hint_x: None
+                            width: "32dp"
+                        FieldLabel:
+                            text: "None yet"
+
+                # ---- Section 3: Skills by language ----
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 6
+
+                    SectionHeading:
+                        text: "3. Skills, by language"
+                    FieldLabel:
+                        text: "Leave a language on \"Not used\" to skip it."
+                        color: theme.C.form_hint
+
+                    BoxLayout:
+                        size_hint_y: None
+                        height: "40dp"
+                        spacing: 10
+                        FieldLabel:
+                            text: "Python"
+                            size_hint_x: 0.3
+                        Spinner:
+                            id: skill_python
+                            text: "Not used"
+                            values: ["Not used", "Class only", "Small, on my own", "Multi-file project"]
+
+                    BoxLayout:
+                        size_hint_y: None
+                        height: "40dp"
+                        spacing: 10
+                        FieldLabel:
+                            text: "C++"
+                            size_hint_x: 0.3
+                        Spinner:
+                            id: skill_cpp
+                            text: "Not used"
+                            values: ["Not used", "Class only", "Small, on my own", "Multi-file project"]
+
+                    BoxLayout:
+                        size_hint_y: None
+                        height: "40dp"
+                        spacing: 10
+                        FieldLabel:
+                            text: "Java"
+                            size_hint_x: 0.3
+                        Spinner:
+                            id: skill_java
+                            text: "Not used"
+                            values: ["Not used", "Class only", "Small, on my own", "Multi-file project"]
+
+                    BoxLayout:
+                        size_hint_y: None
+                        height: "40dp"
+                        spacing: 10
+                        FieldLabel:
+                            text: "JS"
+                            size_hint_x: 0.3
+                        Spinner:
+                            id: skill_js
+                            text: "Not used"
+                            values: ["Not used", "Class only", "Small, on my own", "Multi-file project"]
+
+                    BoxLayout:
+                        size_hint_y: None
+                        height: "40dp"
+                        spacing: 10
+                        FieldLabel:
+                            text: "Other"
+                            size_hint_x: 0.3
+                        Spinner:
+                            id: skill_other
+                            text: "Not used"
+                            values: ["Not used", "Class only", "Small, on my own", "Multi-file project"]
+
+                # ---- Section 4: What you've built ----
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 6
+
+                    SectionHeading:
+                        text: "4. What you've built"
+
+                    FieldLabel:
+                        text: "Number of projects"
+                    Spinner:
+                        id: project_count_spinner
+                        text: "0"
+                        values: ["0", "1", "2-3", "4+"]
+                        size_hint_y: None
+                        height: "40dp"
+
+                    FieldLabel:
+                        text: "For your biggest project, you..."
+                    Spinner:
+                        id: biggest_project_spinner
+                        text: "N/A - no projects"
+                        values: ["Solo", "Team", "Tutorial", "Mostly AI-generated", "N/A - no projects"]
+                        size_hint_y: None
+                        height: "40dp"
+
+                    FieldLabel:
+                        text: "Deployed or live anywhere?"
+                    Spinner:
+                        id: deployed_spinner
+                        text: "No"
+                        values: ["Yes", "No"]
+                        size_hint_y: None
+                        height: "40dp"
+
+                    FieldLabel:
+                        text: "If yes -- link(s)"
+                    TextInput:
+                        id: deployed_link_input
+                        hint_text: "https://"
+                        multiline: False
+                        size_hint_y: None
+                        height: "40dp"
+
+                # ---- Section 5: Already carrying ----
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 6
+
+                    SectionHeading:
+                        text: "5. What you're already carrying"
+                    FieldLabel:
+                        text: "This shapes your \"not now\" list."
+                        color: theme.C.form_hint
+
+                    CheckRow:
+                        CheckBox:
+                            id: ac_online
+                            size_hint_x: None
+                            width: "32dp"
+                        FieldLabel:
+                            text: "Online course (CS50, Coursera, etc.)"
+                    CheckRow:
+                        CheckBox:
+                            id: ac_leetcode
+                            size_hint_x: None
+                            width: "32dp"
+                        FieldLabel:
+                            text: "LeetCode / NeetCode / HackerRank"
+                    CheckRow:
+                        CheckBox:
+                            id: ac_hack
+                            size_hint_x: None
+                            width: "32dp"
+                        FieldLabel:
+                            text: "Hackathons"
+                    CheckRow:
+                        CheckBox:
+                            id: ac_club
+                            size_hint_x: None
+                            width: "32dp"
+                        FieldLabel:
+                            text: "Club leadership"
+                    CheckRow:
+                        CheckBox:
+                            id: ac_research
+                            size_hint_x: None
+                            width: "32dp"
+                        FieldLabel:
+                            text: "Research, or looking for it"
+                    CheckRow:
+                        CheckBox:
+                            id: ac_cert
+                            size_hint_x: None
+                            width: "32dp"
+                        FieldLabel:
+                            text: "Certifications"
+                    CheckRow:
+                        CheckBox:
+                            id: ac_none
+                            size_hint_x: None
+                            width: "32dp"
+                        FieldLabel:
+                            text: "Nothing yet"
+
+                # ---- Section 6: Constraints and goal ----
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 6
+
+                    SectionHeading:
+                        text: "6. Constraints and goal"
+
+                    FieldLabel:
+                        text: "Hours per week genuinely available"
+                    Spinner:
+                        id: hours_spinner
+                        text: "5-10"
+                        values: ["Under 5", "5-10", "10-15", "15+"]
+                        size_hint_y: None
+                        height: "40dp"
+
+                    FieldLabel:
+                        text: "Semester credit load"
+                    Spinner:
+                        id: credits_spinner
+                        text: "12-15"
+                        values: ["12-15", "16-18", "19+"]
+                        size_hint_y: None
+                        height: "40dp"
+
+                    FieldLabel:
+                        text: "Goal for the next 6-12 months"
+                    Spinner:
+                        id: goal_spinner
+                        text: "Get first internship"
+                        values: ["Get first internship", "Build first real project", "Figure out if CS is for me", "Strengthen fundamentals"]
+                        size_hint_y: None
+                        height: "40dp"
+
+                # ---- Optional free text ----
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 6
+
+                    SectionHeading:
+                        text: "Optional: anything else about your situation?"
+                    TextInput:
+                        id: free_text_input
+                        hint_text: "Not required."
+                        size_hint_y: None
+                        height: "80dp"
+
+                Label:
+                    id: error_label
+                    text: ""
+                    color: theme.C.form_error
+                    size_hint_y: None
+                    height: "28dp"
+
+                Button:
+                    text: "Generate my roadmap"
+                    size_hint_y: None
+                    height: "52dp"
+                    on_press: root.submit()

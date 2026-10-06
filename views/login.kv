@@ -1,0 +1,58 @@
+#:import theme views.theme
+
+<LoginScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: 48
+        spacing: 16
+
+        Label:
+            text: "Log in"
+            font_size: "26sp"
+            bold: True
+            size_hint_y: None
+            height: "44dp"
+
+        Label:
+            text: "Email"
+            size_hint_y: None
+            height: "22dp"
+        TextInput:
+            id: email_input
+            multiline: False
+            size_hint_y: None
+            height: "44dp"
+
+        Label:
+            text: "Password"
+            size_hint_y: None
+            height: "22dp"
+        TextInput:
+            id: password_input
+            password: True
+            multiline: False
+            size_hint_y: None
+            height: "44dp"
+
+        Label:
+            id: error_label
+            text: ""
+            color: theme.C.form_error
+            size_hint_y: None
+            height: "24dp"
+
+        Button:
+            text: "Log in"
+            size_hint_y: None
+            height: "48dp"
+            on_press: root.submit()
+
+        Widget:
+            # spacer
+
+        Button:
+            text: "Need an account? Sign up"
+            size_hint_y: None
+            height: "36dp"
+            background_color: theme.C.clear
+            on_press: root.go_to_signup()
