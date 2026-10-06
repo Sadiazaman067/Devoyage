@@ -11,7 +11,7 @@ We all use AI tools to research and build separately. AI output is only consiste
 3. If you learn something in research that the team needs (a library choice, a gotcha, a limitation), add it to the Decision Log or your phase notes here, so the next person's AI chat knows it too.  
 4. AI can be used to research, prototype, explain, debug, and assist with implementation. Each member must still understand and be able to explain work submitted in their area.
 
-   ## **Team**
+## **Team**
 
 | Person | Role |
 | ----- | ----- |
@@ -55,6 +55,7 @@ Decided:
 * (09/28) Sugam's AI work may run ahead of the current implementation phase as research/prototyping so his learning schedule does not block the core MVC implementation.  
 * (09/28) Tami's Frontend role and Sadia's Database/Models role remain unchanged.  
 * (09/28) The new responsibility boundaries are forward-looking only. They do not reassign credit for work performed before this decision.
+* (10/01) Settings Page scope decided: three persistent, per-user settings — theme (light/dark), editable weekly-hours (reuses intakes.weekly_hours), and account management (change password, change email) — persisted in a new settings table plus an update to the user's latest intake row, not config.ini, per the Phase 3 rule that app preferences stay in .ini and user data stays in the DB. Also added two roadmap actions reachable from Settings: Regenerate Roadmap (reuses existing generate_roadmap(user_id) — for when circumstances change) and Clear Roadmap Data (new clear_roadmap_data(user_id) — full reset; does not touch intake history).
 
 Open (fill in as decided, with date):
 
@@ -63,10 +64,9 @@ Open (fill in as decided, with date):
 * Whether the `users` model needs a username or display-name field in addition to the currently specified fields  
 * Whether `log_in` needs an intake-completion check before routing the user to the dashboard  
 * Which four "additional pages" we declare for Milestone 2 (proposal below)  
-* What goes in Settings beyond the required config management (proposal below)  
 * Exact controller-facing function/signature exposed by `services/ai.py`; do not introduce a new shared function name until the team agrees on it
 
-  ## **Course requirements mapping (from the Semester Project Outline)**
+## **Course requirements mapping (from the Semester Project Outline)**
 
 The app must have: a dashboard homepage with 3+ features; 4 additional pages each focused on a feature set; a settings page whose settings persist in a .ini/config file; a local or remote database; MVC architecture; Python/Kivy only.
 
@@ -77,9 +77,9 @@ Proposed mapping (finalize at Milestone 2):
 * Additional page 2: Career paths breakdown (Tier 2, F6)  
 * Additional page 3: Resources hub (Tier 2, F7)  
 * Additional page 4: Login/account page, or AI chat (F8) if schedule allows; decide at Milestone 2  
-* Settings page: theme or text size, regenerate/clear roadmap data, manage account. Settings persist to config.ini via configparser.
+* Settings page: three persistent per-user preferences — theme (light/dark), editable weekly-hours, and account management (change password, change email) — plus two roadmap actions: Regenerate Roadmap (for when life changes and the current plan no longer fits) and Clear Roadmap Data (a full reset to start over). The three preferences persist in the database, not config.ini, since they're user data, not app-wide settings (see 10/01 Decision Log and the Phase 3 rule on app preferences vs. user data). Regenerate reuses the existing generate_roadmap(user_id); Clear is a new function (below).
 
-  ## **Shared Vocabulary**
+## **Shared Vocabulary**
 
 Use these words to mean exactly this, in code, docs, and AI chats:
 
@@ -90,7 +90,7 @@ Use these words to mean exactly this, in code, docs, and AI chats:
 * **Status**: a step is either `pending` or `done`. Exactly these two strings in Tier 1\.  
 * **Screen**: one Kivy page. Screen names (ScreenManager ids): `landing`, `login`, `signup`, `intake`, `dashboard`, `settings`, plus Tier 2 screens when specced.
 
-  ## **Architecture (MVC, one Python app)**
+## **Architecture (MVC, one Python app)**
 
 * devoyage/  
 *   main.py            \# app entry point, ScreenManager setup  
@@ -220,6 +220,14 @@ Sadia owns the implementation in SQLite; everyone conforms to these names. All n
 * title  
 * reasoning (why to skip it for now)
 
+**settings**
+
+* user\_id (primary key, foreign key \-\> users.id) — one row per user, created at sign\_up with theme `light`  
+* theme: `light | dark`  
+* updated\_at
+
+(weekly_hours is not duplicated here — it's updated in place on the user's latest intakes row. Email/password are updated in place on users.)
+
 Tier 2 tables (resources, career paths, chat) get added here before anyone builds them.
 
 ## **Module Contract (how views, controllers, services, and models connect)**
@@ -259,8 +267,19 @@ Existing controller contract:
 * `generate_roadmap(user_id) -> roadmap` (gets the latest intake, uses the AI service, validates the application flow, saves through Sadia's models, returns)  
 * `get_current_roadmap(user_id) -> roadmap with steps ordered by position + not_now_items`  
 * `set_step_status(step_id, status) -> None` (status must be `pending` or `done`)
+* `clear_roadmap_data(user_id) -> None` (deletes all of the user's roadmaps, including history, along with their steps and not-now items, for a full reset; does not touch intake history, so the user can regenerate from their existing intake or redo intake first)
 
-  ### **Model-layer contract**
+### **Settings (controllers/settings.py)**
+
+Forward owner: Arnav.
+
+* `get_settings(user_id) -> settings_data` (combines theme from the settings table with weekly_hours from the user's latest intake, for the Settings screen to display)
+* `update_theme(user_id, theme) -> None`
+* `update_weekly_hours(user_id, weekly_hours) -> None` (updates weekly_hours on the user's latest intake row; does not create a new intake)
+* `change_password(user_id, current_password, new_password) -> None` (raises AuthError if current_password is wrong; reuses the hashing logic from sign_up)
+* `change_email(user_id, new_email) -> None` (raises on duplicate email, same as sign_up)
+
+### **Model-layer contract**
 
 Owner: Sadia.
 
@@ -272,7 +291,7 @@ Until that decision is made:
 * this document does not invent new model function names;  
 * once the team agrees on the model API, the exact function signatures are added here.
 
-  ### **AI-service contract**
+### **AI-service contract**
 
 Owner: Sugam.
 
@@ -305,7 +324,7 @@ The AI service does NOT:
 * decide which user's intake should be used;  
 * decide persistence policy.
 
-  ### **Errors**
+### **Errors**
 
 Controllers/services raise our own exception types (e.g. `AuthError`, `ValidationError`, `AIServiceError`) with a human-readable message.
 
@@ -333,7 +352,7 @@ Rules:
 * The API key lives in a .env file (gitignored) or environment variable, NEVER in code, NEVER in config.ini (config.ini is committed; the key is a secret).  
 * reasoning fields must reference the user's actual intake (their hours, their carrying list, their level), not generic advice. This is the product's whole identity.
 
-  ## **AI-service development rule**
+## **AI-service development rule**
 
 Sugam owns the AI-service domain, but development is prototype-first.
 
@@ -635,6 +654,7 @@ The formal Testing/QA owner, once assigned, coordinates the cross-system gate. C
 
 * persistence required for step status;  
 * settings that belong in the DB vs `.ini`;  
+* (resolved 10/01: settings table holds theme; weekly_hours stays on intakes; config.ini remains app-level only — see Decision Log)  
 * rule: app preferences in `.ini`, user data in DB;  
 * model/config helpers required by the controller.
 
@@ -762,7 +782,7 @@ Before prototype code enters `services/ai.py`:
 * Arnav has reviewed the backend integration boundary;  
 * unnecessary prototype-only code is removed.
 
-  ## **Testing / QA**
+## **Testing / QA**
 
 Testing remains required even while the formal Testing/QA owner is TBD.
 
@@ -805,5 +825,4 @@ Until that person is selected, the team must still explicitly assign someone to 
 * The Decision Log gets a dated line every time something is decided, including in group chat.  
 * Stuck for more than an hour: post in the group chat with what you tried. Do not silently rewrite someone else's area to unblock yourself.  
 * Grade-driven discipline (documentation and process are over half the rubric): meeting minutes for EVERY meeting, submitted every 2 weeks (15% of grade, lead tracks this); individual journals updated at every milestone (graded separately); the Figma design document is worth 20% and gets real time, not leftovers.  
-* 
-
+*
