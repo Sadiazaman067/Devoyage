@@ -15,7 +15,7 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 import os
 
-from controllers.auth import sign_up, AuthError
+from views.controllers_api import sign_up, AuthError  # swap point: see views/controllers_api.py
 
 Builder.load_file(os.path.join(os.path.dirname(__file__), "signup.kv"))
 

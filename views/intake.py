@@ -23,7 +23,7 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 import os
 
-from controllers.intake import save_intake
+from views.controllers_api import save_intake  # swap point: see views/controllers_api.py
 from pydantic import ValidationError
 
 Builder.load_file(os.path.join(os.path.dirname(__file__), "intake.kv"))
