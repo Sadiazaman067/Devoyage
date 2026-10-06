@@ -1,0 +1,144 @@
+"""
+Phase 2 sanity check for the database layer (roadmaps, steps, not-now items).
+
+Like dev_check.py, this is NOT Sugam's pytest suite -- it just proves YOUR part
+of Phase 2 works before Arnav wires generate_roadmap() on top of it.
+
+Run it from the repo root:
+
+    python dev_check_phase2.py
+
+Uses its own throwaway database file and deletes it when done.
+"""
+
+import os
+from pathlib import Path
+
+from models import db, users, intakes, roadmaps
+
+CHECK_DB_PATH = Path(__file__).resolve().parent / "devoyage_phase2_check.db"
+
+INTAKE = {
+    "year": "sophomore",
+    "major_status": "declared",
+    "has_pipeline": "unsure",
+    "coursework": ["intro", "oop"],
+    "skills": [{"language": "python", "level": "small_solo"}],
+    "project_count": "1",
+    "biggest_project_type": "solo",
+    "deployed": "no",
+    "carrying": ["leetcode"],
+    "weekly_hours": "5_10",
+    "credit_load": "16_18",
+    "goal": "internship",
+    "free_text": None,
+}
+
+
+def make_steps(prefix, n):
+    return [
+        {
+            "title": f"{prefix} step {i}",
+            "description": f"{prefix} description {i}",
+            "reasoning": f"{prefix} reasoning {i}",
+            "est_time": "1 week",
+        }
+        for i in range(1, n + 1)
+    ]
+
+
+def main():
+    if CHECK_DB_PATH.exists():
+        os.remove(CHECK_DB_PATH)
+
+    conn = db.get_connection(CHECK_DB_PATH)
+    db.init_db(conn)
+
+    alice = users.create_user(conn, "alice@usm.edu", "hash-a")
+    bob = users.create_user(conn, "bob@usm.edu", "hash-b")
+    alice_intake = intakes.save_intake(conn, alice, INTAKE)
+    bob_intake = intakes.save_intake(conn, bob, INTAKE)
+
+    # 1. No roadmap yet -> None (the dashboard must handle this, not crash)
+    assert roadmaps.get_current_roadmap(conn, alice) is None
+    print("[ok] new user with no roadmap gets None")
+
+    # 2. Dashboard read returns steps in position order + not-now items together
+    first_id = roadmaps.create_roadmap(
+        conn, alice, alice_intake, make_steps("first", 5),
+        [{"title": "Skip A", "reasoning": "why A"}, {"title": "Skip B", "reasoning": "why B"}],
+    )
+    current = roadmaps.get_current_roadmap(conn, alice)
+    assert current["id"] == first_id
+    assert [s["position"] for s in current["steps"]] == [1, 2, 3, 4, 5]
+    assert len(current["not_now_items"]) == 2
+    assert all(s["status"] == "pending" for s in current["steps"])
+    print("[ok] dashboard read: steps in order, not-now items attached, all pending")
+
+    # 3. Regeneration policy: new roadmap becomes current, old one is kept
+    second_id = roadmaps.create_roadmap(
+        conn, alice, alice_intake, make_steps("second", 6),
+        [{"title": "Skip C", "reasoning": "why C"}, {"title": "Skip D", "reasoning": "why D"}],
+    )
+    current = roadmaps.get_current_roadmap(conn, alice)
+    assert current["id"] == second_id
+    assert current["steps"][0]["title"] == "second step 1"
+    old_rows = conn.execute(
+        "SELECT COUNT(*) AS n FROM roadmaps WHERE user_id = ?", (alice,)
+    ).fetchone()["n"]
+    assert old_rows == 2
+    print("[ok] regeneration: newest roadmap is current, history kept (2 rows)")
+
+    # 4. Users only see their own roadmap
+    bob_id_roadmap = roadmaps.create_roadmap(
+        conn, bob, bob_intake, make_steps("bob", 5),
+        [{"title": "Skip X", "reasoning": "why X"}, {"title": "Skip Y", "reasoning": "why Y"}],
+    )
+    assert roadmaps.get_current_roadmap(conn, bob)["id"] == bob_id_roadmap
+    assert roadmaps.get_current_roadmap(conn, alice)["id"] == second_id
+    print("[ok] two users each see only their own roadmap")
+
+    # 5. Never save a partial roadmap: a bad step must roll EVERYTHING back
+    before = conn.execute("SELECT COUNT(*) AS n FROM roadmaps").fetchone()["n"]
+    bad_steps = make_steps("bad", 3)
+    del bad_steps[2]["reasoning"]  # missing required field
+    try:
+        roadmaps.create_roadmap(conn, alice, alice_intake, bad_steps, [])
+        raise SystemExit("[FAIL] a partial roadmap was saved")
+    except KeyError:
+        pass
+    after = conn.execute("SELECT COUNT(*) AS n FROM roadmaps").fetchone()["n"]
+    leftover_steps = conn.execute(
+        "SELECT COUNT(*) AS n FROM roadmap_steps WHERE title LIKE 'bad step%'"
+    ).fetchone()["n"]
+    assert before == after and leftover_steps == 0
+    print("[ok] bad step -> rollback: no partial roadmap saved")
+
+    # 6. Status only accepts the two Tier 1 strings
+    step_id = current["steps"][0]["id"]
+    roadmaps.set_step_status(conn, step_id, "done")
+    assert roadmaps.get_current_roadmap(conn, alice)["steps"][0]["status"] == "done"
+    roadmaps.set_step_status(conn, step_id, "pending")
+    try:
+        roadmaps.set_step_status(conn, step_id, "finished")
+        raise SystemExit("[FAIL] invalid status was accepted")
+    except ValueError:
+        pass
+    print("[ok] status: done/pending work, anything else is rejected")
+
+    # 7. User isolation on writes: Bob can't change Alice's step
+    alice_step = roadmaps.get_current_roadmap(conn, alice)["steps"][1]["id"]
+    assert roadmaps.set_step_status(conn, alice_step, "done", user_id=bob) is False
+    still = roadmaps.get_current_roadmap(conn, alice)["steps"][1]["status"]
+    assert still == "pending"
+    assert roadmaps.set_step_status(conn, alice_step, "done", user_id=alice) is True
+    assert roadmaps.get_current_roadmap(conn, alice)["steps"][1]["status"] == "done"
+    print("[ok] isolation: Bob can't change Alice's step, Alice can")
+
+    conn.close()
+    os.remove(CHECK_DB_PATH)
+    print("\nAll Phase 2 database checks passed.")
+
+
+if __name__ == "__main__":
+    main()
