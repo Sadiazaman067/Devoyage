@@ -56,6 +56,7 @@ Decided:
 * (09/28) Tami's Frontend role and Sadia's Database/Models role remain unchanged.  
 * (09/28) The new responsibility boundaries are forward-looking only. They do not reassign credit for work performed before this decision.
 * (10/01) Settings Page scope decided: three persistent, per-user settings — theme (light/dark), editable weekly-hours (reuses intakes.weekly_hours), and account management (change password, change email) — persisted in a new settings table plus an update to the user's latest intake row, not config.ini, per the Phase 3 rule that app preferences stay in .ini and user data stays in the DB. Also added two roadmap actions reachable from Settings: Regenerate Roadmap (reuses existing generate_roadmap(user_id) — for when circumstances change) and Clear Roadmap Data (new clear_roadmap_data(user_id) — full reset; does not touch intake history).
+* (10/06) Weekly Focus Panel (Milestone 2 dashboard feature) deferred: stays in the submitted features doc, built only after Phases 1-3 are done.
 
 Open (fill in as decided, with date):
 
