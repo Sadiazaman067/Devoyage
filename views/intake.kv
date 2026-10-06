@@ -1,4 +1,5 @@
 #:import utils kivy.utils
+#:import theme views.theme
 
 <SectionHeading@Label>:
     bold: True
@@ -35,7 +36,7 @@
         Label:
             text: "Six quick sections, mostly taps and clicks -- takes about 5 minutes."
             font_size: "13sp"
-            color: 0.45, 0.45, 0.45, 1
+            color: theme.C.form_subtitle
             size_hint_y: None
             height: "22dp"
 
@@ -98,7 +99,7 @@
                         text: "2. Coursework"
                     FieldLabel:
                         text: "Check everything completed or currently in progress."
-                        color: 0.5, 0.5, 0.5, 1
+                        color: theme.C.form_hint
 
                     CheckRow:
                         CheckBox:
@@ -140,7 +141,7 @@
                         text: "3. Skills, by language"
                     FieldLabel:
                         text: "Leave a language on \"Not used\" to skip it."
-                        color: 0.5, 0.5, 0.5, 1
+                        color: theme.C.form_hint
 
                     BoxLayout:
                         size_hint_y: None
@@ -259,7 +260,7 @@
                         text: "5. What you're already carrying"
                     FieldLabel:
                         text: "This shapes your \"not now\" list."
-                        color: 0.5, 0.5, 0.5, 1
+                        color: theme.C.form_hint
 
                     CheckRow:
                         CheckBox:
@@ -366,7 +367,7 @@
                 Label:
                     id: error_label
                     text: ""
-                    color: 0.8, 0.2, 0.2, 1
+                    color: theme.C.form_error
                     size_hint_y: None
                     height: "28dp"
 

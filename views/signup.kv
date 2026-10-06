@@ -1,3 +1,5 @@
+#:import theme views.theme
+
 <SignUpScreen>:
     BoxLayout:
         orientation: "vertical"
@@ -35,7 +37,7 @@
         Label:
             id: error_label
             text: ""
-            color: 0.8, 0.2, 0.2, 1
+            color: theme.C.form_error
             size_hint_y: None
             height: "24dp"
 
@@ -52,5 +54,5 @@
             text: "Already have an account? Log in"
             size_hint_y: None
             height: "36dp"
-            background_color: 0, 0, 0, 0
+            background_color: theme.C.clear
             on_press: root.go_to_login()
