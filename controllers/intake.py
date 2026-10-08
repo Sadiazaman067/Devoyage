@@ -1,6 +1,7 @@
 from typing import Literal, Optional
 from pydantic import BaseModel, Field
-
+from models.intakes import save_intake as db_save_intake
+from models import db
 
 class SkillData(BaseModel):
     language: Literal["python", "cpp", "java", "js", "other"]
@@ -46,13 +47,15 @@ class IntakeData(BaseModel):
 
     free_text: Optional[str] = Field(default=None, max_length=500)
 
-def save_intake(conn, user_id, intake_data):
-    validated = IntakeData.model_validate(intake_data)
+def save_intake(user_id, intake_data):
+    conn=db.get_connection()
+    try:
+        validated = IntakeData.model_validate(intake_data)
 
-    from intakes import save_intake as db_save_intake
-
-    return db_save_intake(
-        conn,
-        user_id,
-        validated.model_dump()
-    )
+        return db_save_intake(
+            conn,
+            user_id,
+            validated.model_dump()
+        )
+    finally:
+        conn.close()
