@@ -67,3 +67,25 @@ def set_setting(section, key, value, path=None):
         parser.add_section(section)
     parser.set(section, key, str(value))
     save_settings(parser, path)
+# ---------------------------------------------------------------------------
+# Per-user theme, stored in config.ini (one section per user: [user_3] etc.)
+# ---------------------------------------------------------------------------
+
+VALID_THEMES = ("light", "dark")
+
+
+def get_user_theme(user_id, path=None):
+    """
+    Theme for one user. Falls back to the app-wide default ([app] theme) if
+    this user has never picked one.
+    """
+    parser = load_settings(path)
+    default = parser.get("app", "theme", fallback="light")
+    return parser.get(f"user_{user_id}", "theme", fallback=default)
+
+
+def set_user_theme(user_id, theme, path=None):
+    """Save one user's theme. Only 'light' or 'dark' are allowed."""
+    if theme not in VALID_THEMES:
+        raise ValueError(f"theme must be one of {VALID_THEMES}, got {theme!r}")
+    set_setting(f"user_{user_id}", "theme", theme, path=path)
