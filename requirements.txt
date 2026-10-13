@@ -1,0 +1,6 @@
+kivy
+pydantic
+anthropic
+pytest
+passlib
+bcrypt==4.0.1
