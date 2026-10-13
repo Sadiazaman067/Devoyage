@@ -1,11 +1,14 @@
 """
 Intake screen (Module Contract screen id: "intake"), feature F2.
 
-This view builds intake_data as a plain dict shaped EXACTLY like the
-Data Models section's `intakes` table, then hands it to Sugam's
-controller:
+This view builds intake_data as a plain dict shaped exactly like the
+controller's intake input (the IntakeData fields and values in the
+Module Contract), then hands it to the intake controller:
 
     save_intake(user_id, intake_data) -> intake_id
+
+The view never depends on how the database table is laid out; that's
+the model layer's job.
 
 Pydantic validation happens inside that controller call, not here --
 this view's job is only to translate Kivy widget state into the
