@@ -1,5 +1,5 @@
 from passlib.context import CryptContext
-from controllers.exceptions import authError, validationError
+from controllers.exceptions import AuthError, ValidationError
 from models import db, users
 import sqlite3
 
@@ -18,11 +18,11 @@ def verifyPassword(plainPassword:str, hashedPassword:str)->bool:
     return pwdContext.verify(plainPassword,hashedPassword)
 
 #check duplicate entry 
-def checkDuplicateEmail(conn:sqlite3.connection, email: str) -> None:
+def checkDuplicateEmail(conn:sqlite3.Connection, email: str) -> None:
     existingUser = users.get_user_by_email(conn, email)
 
     if existingUser is not None:
-        raise authError(f"User with email {email} already exists")
+        raise AuthError(f"User with email {email} already exists")
 
 #basic signup prompt
 def sign_up(email:str, password:str)-> int:
@@ -30,14 +30,16 @@ def sign_up(email:str, password:str)-> int:
     global currentUser
 
     #frontend prompt logic
-    if not email or "@" not in email: 
-        raise validationError("Email address required")
-
-    if not password or len(password)<8:
-        raise validationError("Password must be atleast 8 characters long")
 
     #change email to lowercase and remove whitespaces to store same format in db
     normalizedEmail=email.strip().lower()
+    
+    if not email or "@" not in email: 
+        raise ValidationError("Email address required")
+
+    if not password or len(password)<8:
+        raise ValidationError("Password must be atleast 8 characters long")
+
 
     conn=db.get_connection()#get connection from sqlite
     
@@ -60,7 +62,7 @@ def log_in(email: str, password: str)->int:
     global currentUser
 
     if not email or not password:
-        raise validationError("Email and password cannot be empty")
+        raise ValidationError("Email and password cannot be empty")
 
     normalized_email= email.strip().lower()
 
@@ -68,11 +70,11 @@ def log_in(email: str, password: str)->int:
     try:
         existingUser= users.get_user_by_email(conn,normalized_email)
         if existingUser is None:
-            raise authError("Invalid email or password.")
+            raise AuthError("Invalid email or password.")
 
         # verify bcrypt hash
         if not verifyPassword(password, existingUser["password_hash"]):
-            raise authError("Invalid email or password")
+            raise AuthError("Invalid email or password")
 
         #update session
         currentUser = existingUser["id"]
@@ -83,7 +85,7 @@ def log_in(email: str, password: str)->int:
 
 
 #basic logout prompt
-def logout()-> None:
+def log_out()-> None:
     global currentUser
 
     currentUser=None
