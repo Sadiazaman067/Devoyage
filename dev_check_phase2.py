@@ -116,11 +116,11 @@ def main():
 
     # 6. Status only accepts the two Tier 1 strings
     step_id = current["steps"][0]["id"]
-    roadmaps.set_step_status(conn, step_id, "done")
+    roadmaps.set_step_status(conn, step_id, "done", user_id=alice)
     assert roadmaps.get_current_roadmap(conn, alice)["steps"][0]["status"] == "done"
-    roadmaps.set_step_status(conn, step_id, "pending")
+    roadmaps.set_step_status(conn, step_id, "pending", user_id=alice)
     try:
-        roadmaps.set_step_status(conn, step_id, "finished")
+        roadmaps.set_step_status(conn, step_id, "finished", user_id=alice)
         raise SystemExit("[FAIL] invalid status was accepted")
     except ValueError:
         pass
