@@ -10,12 +10,9 @@ Why the stubs are active right now (checked on main, 10/06):
   - controllers/auth.py does not exist on main (the auth branch was
     merged and then reverted).
   - controllers/roadmap.py does not exist on main.
-  - controllers/intake.py exists, but its save_intake takes
-    (conn, user_id, intake_data) instead of the Module Contract's
-    (user_id, intake_data), and it imports `from intakes import ...`,
-    which fails at call time. Calling it from the intake screen would
-    crash, so it stays stubbed until it matches the contract.
-
+  - controllers/intake.py: fixed in PR #10 (save_intake(user_id, intake_data),
+    controller owns the connection). Switch it together with auth: the real
+    intake saves to the real database, which needs a real user from real login.
 To switch: comment out block A and uncomment block B.
 """
 

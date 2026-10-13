@@ -106,6 +106,7 @@
                             id: cw_intro
                             size_hint_x: None
                             width: "32dp"
+                            on_active: root.on_checkbox("coursework", "cw_intro", self.active)
                         FieldLabel:
                             text: "Intro programming"
                     CheckRow:
@@ -113,6 +114,7 @@
                             id: cw_oop
                             size_hint_x: None
                             width: "32dp"
+                            on_active: root.on_checkbox("coursework", "cw_oop", self.active)
                         FieldLabel:
                             text: "Second course / OOP"
                     CheckRow:
@@ -120,6 +122,7 @@
                             id: cw_dsa
                             size_hint_x: None
                             width: "32dp"
+                            on_active: root.on_checkbox("coursework", "cw_dsa", self.active)
                         FieldLabel:
                             text: "Data structures"
                     CheckRow:
@@ -127,6 +130,7 @@
                             id: cw_none
                             size_hint_x: None
                             width: "32dp"
+                            on_active: root.on_checkbox("coursework", "cw_none", self.active)
                         FieldLabel:
                             text: "None yet"
 
@@ -267,6 +271,7 @@
                             id: ac_online
                             size_hint_x: None
                             width: "32dp"
+                            on_active: root.on_checkbox("carrying", "ac_online", self.active)
                         FieldLabel:
                             text: "Online course (CS50, Coursera, etc.)"
                     CheckRow:
@@ -274,6 +279,7 @@
                             id: ac_leetcode
                             size_hint_x: None
                             width: "32dp"
+                            on_active: root.on_checkbox("carrying", "ac_leetcode", self.active)
                         FieldLabel:
                             text: "LeetCode / NeetCode / HackerRank"
                     CheckRow:
@@ -281,6 +287,7 @@
                             id: ac_hack
                             size_hint_x: None
                             width: "32dp"
+                            on_active: root.on_checkbox("carrying", "ac_hack", self.active)
                         FieldLabel:
                             text: "Hackathons"
                     CheckRow:
@@ -288,6 +295,7 @@
                             id: ac_club
                             size_hint_x: None
                             width: "32dp"
+                            on_active: root.on_checkbox("carrying", "ac_club", self.active)
                         FieldLabel:
                             text: "Club leadership"
                     CheckRow:
@@ -295,6 +303,7 @@
                             id: ac_research
                             size_hint_x: None
                             width: "32dp"
+                            on_active: root.on_checkbox("carrying", "ac_research", self.active)
                         FieldLabel:
                             text: "Research, or looking for it"
                     CheckRow:
@@ -302,6 +311,7 @@
                             id: ac_cert
                             size_hint_x: None
                             width: "32dp"
+                            on_active: root.on_checkbox("carrying", "ac_cert", self.active)
                         FieldLabel:
                             text: "Certifications"
                     CheckRow:
@@ -309,6 +319,7 @@
                             id: ac_none
                             size_hint_x: None
                             width: "32dp"
+                            on_active: root.on_checkbox("carrying", "ac_none", self.active)
                         FieldLabel:
                             text: "Nothing yet"
 

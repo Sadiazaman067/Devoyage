@@ -93,12 +93,29 @@ CARRYING_CHECKBOXES = {
     "ac_none": "none",
 }
 
+# Which checkbox means "none" in each group, and which boxes belong to each group.
+NONE_IDS = {"coursework": "cw_none", "carrying": "ac_none"}
+GROUPS = {"coursework": COURSEWORK_CHECKBOXES, "carrying": CARRYING_CHECKBOXES}
 
 class IntakeScreen(Screen):
     current_user_id = None
 
     def set_current_user(self, user_id):
         self.current_user_id = user_id
+
+    def on_checkbox(self, group, changed_id, active):
+        """Keep "None yet" / "Nothing yet" from being checked with anything else."""
+        if not active:
+            return  # unticking a box never needs to change the other boxes
+        none_id = NONE_IDS[group]
+        if changed_id == none_id:
+            # "None" was ticked: untick every other box in this group.
+            for widget_id in GROUPS[group]:
+                if widget_id != none_id:
+                    self.ids[widget_id].active = False
+        else:
+            # A real option was ticked: untick "None".
+            self.ids[none_id].active = False
 
     def _checked_values(self, id_to_value):
         return [value for widget_id, value in id_to_value.items() if self.ids[widget_id].active]
