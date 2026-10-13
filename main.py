@@ -11,6 +11,7 @@ views/dashboard.py; it replaced the placeholder class that used to
 live here. The wiring below didn't change.
 """
 from kivy.app import App
+from models import db
 from kivy.uix.screenmanager import ScreenManager
 
 from views.landing import LandingScreen
@@ -21,7 +22,16 @@ from views.dashboard import DashboardScreen
 
 
 class DevoyageApp(App):
+    
     def build(self):
+        # Create the database tables if they don't exist yet (safe on every start).
+        # Open one connection just for this, then close it. Controllers open their own.
+        conn = db.get_connection()
+        try:
+            db.init_db(conn)
+        finally:
+            conn.close()  # "finally" means: close it even if init_db failed
+
         sm = ScreenManager()
         sm.add_widget(LandingScreen(name="landing"))
         sm.add_widget(LoginScreen(name="login"))
