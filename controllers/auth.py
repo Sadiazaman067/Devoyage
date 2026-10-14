@@ -49,8 +49,12 @@ def sign_up(email:str, password:str)-> int:
 
         #hash current password, and create new user, storing it in the db
         hashed=hashPassword(password)
-        currentUser=users.create_user(conn, email=normalizedEmail, password_hash=hashed)
+        try:
+            currentUser=users.create_user(conn, email=normalizedEmail, password_hash=hashed)
 
+        except sqlite3.IntegrityError as e:
+            raise AuthError(f"User with email {normalizedEmail} already exists") from e
+        
         return currentUser
     
     finally: #close connection #use finally so that it still executes after error is raised
@@ -91,5 +95,5 @@ def log_out()-> None:
     currentUser=None
 
 #getter for current user
-def getCurrentuser():
+def get_current_user_id():
     return currentUser
