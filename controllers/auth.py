@@ -1,5 +1,5 @@
 from passlib.context import CryptContext
-from controllers.exceptions import AuthError, ValidationError
+from exceptions import AuthError, ValidationError
 from models import db, users
 import sqlite3
 
