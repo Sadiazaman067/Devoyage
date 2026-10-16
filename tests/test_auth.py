@@ -10,7 +10,7 @@ from controllers.auth import (
     log_out,
     getCurrentuser,
 )
-from controllers.exceptions import AuthError, ValidationError
+from exceptions import AuthError, ValidationError
 from models import db, users
 
 
