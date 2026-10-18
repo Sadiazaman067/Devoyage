@@ -19,7 +19,7 @@ We all use AI tools to research and build separately. AI output is only consiste
 | Arnav | Backend Lead (controllers, application logic, backend architecture \+ integration) |
 | Sugam | AI Integration / Service — current responsibility: Anthropic integration, prompting, AI-response handling, validation, and AI-service prototyping  |
 | Sadia | Database (Models) \+ config/settings file |
-| Testing / QA | Owner TBD, decide before the Phase 1 gate is signed off (Activity 4 is a graded deliverable) |
+| Testing / QA | Rotates by phase (see Decision Log); the tester for each phase is named at the start of that phase |
 
    ### **Ownership boundaries going forward**
 
@@ -71,7 +71,6 @@ Decided:
 Open (fill in as decided, with date):
 * Sadia's model-layer function names: finalize them and add them to the Module Contract  
 * Whether the `users` model needs a username or display-name field in addition to the currently specified fields  
-* Which four "additional pages" we declare for Milestone 2 (proposal below)  
 * Exact controller-facing function/signature exposed by `services/ai.py`; do not introduce a new shared function name until the team agrees on it
 * Shared errors file path: Arnav adds it under Errors in the Module Contract once the file exists
 * Who writes Activity 4 (Testing & QA plan)
@@ -109,7 +108,7 @@ Use these words to mean exactly this, in code, docs, and AI chats:
 *   views/             \# Tami: Kivy screens (.py) \+ layout (.kv files)  
 *   controllers/       \# Arnav: application logic between views, services, and models  
 *   services/ai.py     \# Sugam: Anthropic SDK calls, prompt, AI-response handling  
-    tests/             \# Testing/QA owner - The tester role rotates by phase (see Decision Log).: pytest suites \+ manual test scripts
+    tests/             \# pytest suites \+ manual test scripts
 
 Views never touch the database directly, and models never import Kivy. Everything crosses through controllers. That separation IS the MVC requirement being graded.
 
@@ -274,15 +273,10 @@ This is an ownership boundary going forward. It does **not** reassign credit for
 Existing controller contract:
 
 * `save_intake(user_id, intake_data) -> intake_id` (intake_data validated by Pydantic against the intakes shape; raises `ValidationError` if `none` is combined with other answers in coursework or carrying)
-
 * `has_completed_intake(user_id) -> bool` (True if the user has at least one saved intake; used for login routing)
-
 * `generate_roadmap(user_id) -> roadmap` (gets the latest intake, uses the AI service, validates, saves through Sadia's models, and returns the full roadmap in the same shape as `get_current_roadmap`)
-
 * `get_current_roadmap(user_id) -> roadmap with steps ordered by position + not_now_items`
-
 * `set_step_status(step_id, status) -> None` (status must be `pending` or `done`)
-
 * `clear_roadmap_data(user_id) -> None` (deletes all of the user's roadmaps, including history, along with their steps and not-now items, for a full reset; does not touch intake history, so the user can regenerate from their existing intake or redo intake first)
 
 ### **Settings (controllers/settings.py)**
@@ -459,10 +453,7 @@ This prototype is independent of the production MVC application.
 
 #### **Phase 1 test checklist**
 
-The Phase 1 gate remains concrete even though the formal Testing/QA owner is still TBD.
-
-The person assigned by the team to perform/sign off the Phase 1 checklist must verify:
-
+The Phase 1 tester (named at the start of the phase, see Decision Log) must verify:
 * two users see only their own data;  
 * every intake field round-trips;  
 * password appears nowhere in plain text;  
@@ -476,8 +467,6 @@ Phase 2 opens only when:
 2. the Phase 1 checklist above passes;  
 3. blocking failures discovered by the checklist are resolved;  
 4. the team records who performed the QA sign-off.
-
-The permanent Testing/QA owner can still remain an open organizational item, but the Phase 1 gate cannot be waived because the role is unresolved.
 
 ### **Phase 2: The Brain (Roadmap \+ Not-now, features F3 \+ F4)**
 
@@ -650,7 +639,7 @@ The gate remains testable:
 * View \-\> Controller \-\> AI Service \-\> Model boundaries are preserved;  
 * blocking Phase 1/2 regression failures are resolved.
 
-The formal Testing/QA owner, once assigned, coordinates the cross-system gate. Component owners still test their own areas.
+That phase's tester coordinates the cross-system gate. Component owners still test their own areas.
 
 ### **Phase 3: Alive (Progress \+ Settings, feature F5 \+ course-required settings page)**
 
@@ -802,7 +791,7 @@ Before prototype code enters `services/ai.py`:
 
 ## **Testing / QA**
 
-Testing remains required even while the formal Testing/QA owner is TBD.
+Testing is required every phase. The tester role rotates by phase (see Decision Log)
 
 Each component owner is responsible for basic testing of their own area:
 
@@ -811,16 +800,15 @@ Each component owner is responsible for basic testing of their own area:
 * Sadia: models/database/config;  
 * Sugam: AI-service behavior.
 
-The formal Testing/QA owner, once selected, coordinates:
+Each phase's tester coordinates:
 
 * phase checklists;  
 * cross-component tests;  
 * regression testing;  
 * QA documentation;  
-* graded Activity 4 work;  
 * gate sign-off.
 
-Until that person is selected, the team must still explicitly assign someone to execute and record each required gate checklist. An unassigned QA role does not remove the gate.
+No phase moves forward until its tester has run and recorded the gate checklist.
 
 ## **Working agreements**
 
@@ -843,4 +831,3 @@ Until that person is selected, the team must still explicitly assign someone to 
 * The Decision Log gets a dated line every time something is decided, including in group chat.  
 * Stuck for more than an hour: post in the group chat with what you tried. Do not silently rewrite someone else's area to unblock yourself.  
 * Grade-driven discipline (documentation and process are over half the rubric): meeting minutes for EVERY meeting, submitted every 2 weeks (15% of grade, lead tracks this); individual journals updated at every milestone (graded separately); the Figma design document is worth 20% and gets real time, not leftovers.  
-*
