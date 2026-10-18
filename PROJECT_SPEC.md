@@ -57,28 +57,37 @@ Decided:
 * (09/28) The new responsibility boundaries are forward-looking only. They do not reassign credit for work performed before this decision.
 * (10/01) Settings Page scope decided: three persistent, per-user settings — theme (light/dark), editable weekly-hours (reuses intakes.weekly_hours), and account management (change password, change email) — persisted in a new settings table plus an update to the user's latest intake row, not config.ini, per the Phase 3 rule that app preferences stay in .ini and user data stays in the DB. Also added two roadmap actions reachable from Settings: Regenerate Roadmap (reuses existing generate_roadmap(user_id) — for when circumstances change) and Clear Roadmap Data (new clear_roadmap_data(user_id) — full reset; does not touch intake history).
 * (10/06) Weekly Focus Panel (Milestone 2 dashboard feature) deferred: stays in the submitted features doc, built only after Phases 1-3 are done.
+* (10/06) Milestone 2 pages declared in the submitted features doc: Intake, Career Paths, Resources Hub, Portfolio Log. AI Chat and Friends stay "if we have time."
+* (10/13) Names: the Module Contract names are the source of truth (`log_out`, `AuthError`, `ValidationError`). Code is renamed to match the spec, not the other way around.
+* (10/13) Errors: `AuthError`, `ValidationError`, and `AIServiceError` live in one shared errors file. Arnav names and places it, then adds the path under Errors in the Module Contract.
+* (10/13) Login routing: after a successful `log_in`, the app calls `has_completed_intake(user_id)`. Users with no intake go to the intake screen; everyone else goes to the dashboard.
+* (10/13) `generate_roadmap(user_id)` saves the roadmap and returns the full roadmap, in the same shape as `get_current_roadmap`.
+* (10/13) Intake: the "If yes, link(s)" box is removed (`deployed` stays `yes | no`). `none` can't be combined with other answers in coursework or carrying. The screen enforces it and the controller rejects it with `ValidationError`.
+* (10/13) Theme: each user's theme is saved in the `settings` table. `config.ini` holds only app-wide defaults (default theme, database path), because it's committed to the public repo.
+* (10/13) Startup: `main.py` calls `init_db` once at startup so the tables exist before any screen runs.
+* (10/13) Session: one `get_current_user_id()` in the controller layer will replace screens passing user_id to each other. Planned for after the Phase 1 switch.
+* (10/13) Testing/QA: the tester role rotates. The tester for each phase is named at the start of that phase, runs that phase's gate checklist, and records the results.
 
 Open (fill in as decided, with date):
-
-* Testing/QA owner: decide before the Phase 1 gate can be signed off (Activity 4, the Testing & QA plan, is graded)  
 * Sadia's model-layer function names: finalize them and add them to the Module Contract  
 * Whether the `users` model needs a username or display-name field in addition to the currently specified fields  
-* Whether `log_in` needs an intake-completion check before routing the user to the dashboard  
 * Which four "additional pages" we declare for Milestone 2 (proposal below)  
 * Exact controller-facing function/signature exposed by `services/ai.py`; do not introduce a new shared function name until the team agrees on it
+* Shared errors file path: Arnav adds it under Errors in the Module Contract once the file exists
+* Who writes Activity 4 (Testing & QA plan)
 
 ## **Course requirements mapping (from the Semester Project Outline)**
 
 The app must have: a dashboard homepage with 3+ features; 4 additional pages each focused on a feature set; a settings page whose settings persist in a .ini/config file; a local or remote database; MVC architecture; Python/Kivy only.
 
-Proposed mapping (finalize at Milestone 2):
+Mapping (declared in the submitted features doc):
 
 * Dashboard (3+ features): roadmap steps with reasoning, the "not now" list, progress tracking. That is three features on one screen, requirement met by our Tier 1 core.  
 * Additional page 1: Intake questionnaire  
-* Additional page 2: Career paths breakdown (Tier 2, F6)  
-* Additional page 3: Resources hub (Tier 2, F7)  
-* Additional page 4: Login/account page, or AI chat (F8) if schedule allows; decide at Milestone 2  
-* Settings page: three persistent per-user preferences — theme (light/dark), editable weekly-hours, and account management (change password, change email) — plus two roadmap actions: Regenerate Roadmap (for when life changes and the current plan no longer fits) and Clear Roadmap Data (a full reset to start over). The three preferences persist in the database, not config.ini, since they're user data, not app-wide settings (see 10/01 Decision Log and the Phase 3 rule on app preferences vs. user data). Regenerate reuses the existing generate_roadmap(user_id); Clear is a new function (below).
+* Additional page 2: Career paths  
+* Additional page 3: Resources hub  
+* Additional page 4: Portfolio log
+* Settings page: three persistent per-user preferences — theme (light/dark), editable weekly-hours, and account management (change password, change email) — plus two roadmap actions: Regenerate Roadmap (for when life changes and the current plan no longer fits) and Clear Roadmap Data (a full reset to start over). The three preferences persist in the database, not config.ini, since they're user data, not app-wide settings (see 10/01 Decision Log and the Phase 3 rule on app preferences vs. user data). config.ini holds the app-wide defaults (default theme, database path), which covers the .ini requirement. Regenerate reuses the existing generate_roadmap(user_id); Clear is a new function (below).
 
 ## **Shared Vocabulary**
 
@@ -100,7 +109,7 @@ Use these words to mean exactly this, in code, docs, and AI chats:
 *   views/             \# Tami: Kivy screens (.py) \+ layout (.kv files)  
 *   controllers/       \# Arnav: application logic between views, services, and models  
 *   services/ai.py     \# Sugam: Anthropic SDK calls, prompt, AI-response handling  
-    tests/             \# Testing/QA owner TBD: pytest suites \+ manual test scripts
+    tests/             \# Testing/QA owner - The tester role rotates by phase (see Decision Log).: pytest suites \+ manual test scripts
 
 Views never touch the database directly, and models never import Kivy. Everything crosses through controllers. That separation IS the MVC requirement being graded.
 
@@ -254,7 +263,7 @@ Forward owner: Arnav.
 * `log_out()` (clears current session state)  
 * Session: the controller layer tracks the logged-in user\_id in one place; views never pass identity around themselves.
 
-> Open question: whether successful `log_in` also needs an intake-completion check before the application decides whether to route to `intake` or `dashboard`. Until decided, do not silently change the existing `log_in` contract.
+> Routing (decided 10/13): after `log_in` succeeds, the app calls `has_completed_intake(user_id)` (in controllers/intake.py) to pick `intake` or `dashboard`. `log_in` itself still just returns user_id.
 
 ### **Intake and roadmap (controllers/intake.py, controllers/roadmap.py)**
 
@@ -264,10 +273,16 @@ This is an ownership boundary going forward. It does **not** reassign credit for
 
 Existing controller contract:
 
-* `save_intake(user_id, intake_data) -> intake_id` (intake\_data validated by Pydantic against the intakes shape)  
-* `generate_roadmap(user_id) -> roadmap` (gets the latest intake, uses the AI service, validates the application flow, saves through Sadia's models, returns)  
-* `get_current_roadmap(user_id) -> roadmap with steps ordered by position + not_now_items`  
+* `save_intake(user_id, intake_data) -> intake_id` (intake_data validated by Pydantic against the intakes shape; raises `ValidationError` if `none` is combined with other answers in coursework or carrying)
+
+* `has_completed_intake(user_id) -> bool` (True if the user has at least one saved intake; used for login routing)
+
+* `generate_roadmap(user_id) -> roadmap` (gets the latest intake, uses the AI service, validates, saves through Sadia's models, and returns the full roadmap in the same shape as `get_current_roadmap`)
+
+* `get_current_roadmap(user_id) -> roadmap with steps ordered by position + not_now_items`
+
 * `set_step_status(step_id, status) -> None` (status must be `pending` or `done`)
+
 * `clear_roadmap_data(user_id) -> None` (deletes all of the user's roadmaps, including history, along with their steps and not-now items, for a full reset; does not touch intake history, so the user can regenerate from their existing intake or redo intake first)
 
 ### **Settings (controllers/settings.py)**
@@ -328,6 +343,8 @@ The AI service does NOT:
 ### **Errors**
 
 Controllers/services raise our own exception types (e.g. `AuthError`, `ValidationError`, `AIServiceError`) with a human-readable message.
+
+All three live in one shared errors file (location chosen by Arnav; add the path here once it exists). Every layer imports them from there; no layer defines its own copy.
 
 Views catch them and show the message; views never crash on an expected failure.
 
