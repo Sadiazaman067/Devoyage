@@ -15,6 +15,7 @@ class AuthError(Exception):
 
 _fake_users = {}
 _next_id = [1]
+_users_with_intake = set()
 
 
 def sign_up(email, password):
@@ -44,4 +45,11 @@ def save_intake(user_id, intake_data):
     print(f"[stub] would save_intake for user {user_id}:")
     for key, value in intake_data.items():
         print(f"    {key}: {value!r}")
+    _users_with_intake.add(user_id)
     return 1
+
+
+
+def has_completed_intake(user_id):
+    # Real version (PR #10) checks the database for a saved intake.
+    return user_id in _users_with_intake

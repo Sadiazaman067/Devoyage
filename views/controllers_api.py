@@ -17,12 +17,12 @@ To switch: comment out block A and uncomment block B.
 """
 
 # ---- A: dev stubs (ACTIVE) -------------------------------------------------
-from dev_stubs.controllers_stub import sign_up, log_in, log_out, save_intake, AuthError
+from dev_stubs.controllers_stub import sign_up, log_in, log_out, save_intake, has_completed_intake, AuthError
 from dev_stubs.roadmap_stub import get_current_roadmap, generate_roadmap, AIServiceError
 
 # ---- B: real controllers (use once they're on main and match the contract) --
 # from controllers.auth import sign_up, log_in, log_out
-# from controllers.intake import save_intake
+# from controllers.intake import save_intake, has_completed_intake
 # from controllers.roadmap import get_current_roadmap, generate_roadmap
 # from controllers.exceptions import AuthError, AIServiceError  # TODO(team): confirm where these live
 
@@ -31,6 +31,7 @@ __all__ = [
     "log_in",
     "log_out",
     "save_intake",
+    "has_completed_intake",
     "AuthError",
     "get_current_roadmap",
     "generate_roadmap",
