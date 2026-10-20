@@ -15,7 +15,7 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 import os
 
-from views.controllers_api import sign_up, AuthError  # swap point: see views/controllers_api.py
+from views.controllers_api import sign_up, AuthError, ValidationError  # swap point: see views/controllers_api.py
 
 Builder.load_file(os.path.join(os.path.dirname(__file__), "signup.kv"))
 
@@ -31,7 +31,7 @@ class SignUpScreen(Screen):
 
         try:
             user_id = sign_up(email, password)
-        except AuthError as e:
+        except (AuthError, ValidationError) as e:
             self.ids.error_label.text = str(e)
             return
 

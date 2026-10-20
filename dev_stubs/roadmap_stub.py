@@ -27,21 +27,14 @@ Flip SIMULATE_FAILURE to True to see the dashboard's error state.
 import copy
 import time
 from datetime import datetime
+from exceptions import AIServiceError
+
 
 # Set to True to make generate_roadmap raise AIServiceError.
 SIMULATE_FAILURE = False
 
 # Pretend the AI call takes this long. Long enough to see the loading state.
 GENERATION_DELAY_SECONDS = 3
-
-
-class AIServiceError(Exception):
-    """TEMPORARY. AIServiceError isn't defined anywhere in the codebase yet.
-
-    The spec says controllers/services raise it, but where it lives
-    (controllers/exceptions.py? services/ai.py?) is the team's call.
-    It's defined here only so the dashboard has something to catch.
-    """
 
 
 # user_id -> latest roadmap. Mirrors the spec's regeneration policy

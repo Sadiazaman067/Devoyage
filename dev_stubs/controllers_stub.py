@@ -9,8 +9,7 @@ folder's README.md before using this.
 """
 
 
-class AuthError(Exception):
-    pass
+from exceptions import AuthError, ValidationError
 
 
 _fake_users = {}
@@ -19,6 +18,10 @@ _users_with_intake = set()
 
 
 def sign_up(email, password):
+    if not email or "@" not in email:
+        raise ValidationError("Please enter a valid email address.")
+    if len(password) < 8:
+        raise ValidationError("Password must be at least 8 characters long.")    
     if email in _fake_users:
         raise AuthError("An account with that email already exists.")
     user_id = _next_id[0]
@@ -28,6 +31,8 @@ def sign_up(email, password):
 
 
 def log_in(email, password):
+    if not email or not password:
+        raise ValidationError("Email and password cannot be empty.")
     record = _fake_users.get(email)
     if record is None or record["password"] != password:
         raise AuthError("Incorrect email or password.")
@@ -39,6 +44,10 @@ def log_out():
 
 
 def save_intake(user_id, intake_data):
+    for field in ("coursework", "carrying"):
+        answers = intake_data.get(field, [])
+        if "none" in answers and len(answers) > 1:
+            raise ValidationError(f"In {field}, 'none' can't be combined with other answers.")
     # Real save_intake validates intake_data with Pydantic and writes
     # to SQLite via Sadia's models. This stub just proves the view
     # collected something shaped right.

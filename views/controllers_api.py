@@ -16,15 +16,17 @@ Why the stubs are active right now (checked on main, 10/06):
 To switch: comment out block A and uncomment block B.
 """
 
+# ---- Errors: the same real classes in both modes, so they sit outside A and B
+from exceptions import AuthError, ValidationError, AIServiceError
+
 # ---- A: dev stubs (ACTIVE) -------------------------------------------------
-from dev_stubs.controllers_stub import sign_up, log_in, log_out, save_intake, has_completed_intake, AuthError
-from dev_stubs.roadmap_stub import get_current_roadmap, generate_roadmap, AIServiceError
+from dev_stubs.controllers_stub import sign_up, log_in, log_out, save_intake, has_completed_intake
+from dev_stubs.roadmap_stub import get_current_roadmap, generate_roadmap
 
 # ---- B: real controllers (use once they're on main and match the contract) --
 # from controllers.auth import sign_up, log_in, log_out
 # from controllers.intake import save_intake, has_completed_intake
 # from controllers.roadmap import get_current_roadmap, generate_roadmap
-# from controllers.exceptions import AuthError, AIServiceError  # TODO(team): confirm where these live
 
 __all__ = [
     "sign_up",
@@ -36,4 +38,5 @@ __all__ = [
     "get_current_roadmap",
     "generate_roadmap",
     "AIServiceError",
+    "ValidationError",
 ]
