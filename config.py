@@ -3,7 +3,9 @@ config.ini read/write, via the built-in configparser (course requirement).
 
 Rule from the spec: app preferences live in .ini, user data lives in the
 database, and secrets (the Anthropic API key) NEVER go in config.ini --
-config.ini gets committed to git, .env does not.
+they go in .env. config.ini is generated on first run from the DEFAULTS
+below and is NOT committed to git (it's in .gitignore), because it also
+holds each user's theme in a [user_<id>] section.
 
 Usage:
 
