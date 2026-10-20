@@ -1,6 +1,10 @@
 import json
 import os
 from anthropic import Anthropic, AnthropicError
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 class AIServiceError(Exception):
     pass
@@ -91,7 +95,7 @@ def generate_with_claude(intake):
     for attempt in range(2):
         try:
             response = client.messages.create(
-                model="claude-sonnet-4-5",
+                model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
                 max_tokens=2500,
                 messages=[
                     {
@@ -213,3 +217,29 @@ if __name__ == "__main__":
 
     assert build_prompt(sample_intake) != build_prompt(overloaded_intake)
     print("SUCCESS: Two distinct student prompts generated!")
+
+    print("\nREAL CLAUDE ROADMAP TEST:")
+
+    for name, intake in [
+        ("Brand New", sample_intake),
+        ("Overloaded", overloaded_intake),
+    ]:
+        print(f"\nGenerating roadmap for {name}...")
+
+        try:
+            roadmap = generate_with_claude(intake)
+
+            print(f"SUCCESS: {name} roadmap generated!")
+            print(f"Steps: {len(roadmap['steps'])}")
+            print(f"Not-now items: {len(roadmap['not_now'])}")
+
+            for step in roadmap["steps"]:
+                print(f"- {step['title']}")
+                print(f"  Reasoning: {step['reasoning']}")
+
+            print("NOT NOW:")
+            for item in roadmap["not_now"]:
+                print(f"- {item['title']}: {item['reasoning']}")
+
+        except AIServiceError as error:
+            print(f"FAILED: {name}: {error}")
