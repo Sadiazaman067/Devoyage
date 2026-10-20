@@ -8,7 +8,7 @@ from controllers.auth import (
     sign_up,
     log_in,
     log_out,
-    getCurrentuser,
+    get_current_user_id,
 )
 from exceptions import AuthError, ValidationError
 from models import db, users
@@ -21,8 +21,8 @@ class TestAuthSystem(unittest.TestCase):
         Create a fresh temporary SQLite database before every test.
 
         auth.py normally calls db.get_connection() with the real Devoyage
-        database path. During tests, we redirect those calls to this
-        temporary database instead.
+        database path. During tests, redirect those calls to this temporary
+        database instead.
         """
         self.temp_dir = tempfile.TemporaryDirectory()
         self.db_path = Path(self.temp_dir.name) / "test_auth.db"
@@ -36,19 +36,19 @@ class TestAuthSystem(unittest.TestCase):
         conn.commit()
         conn.close()
 
-        # Whenever auth.py asks for a DB connection, give it one to
-        # the temporary test database.
+        # Whenever auth.py requests a DB connection, return a connection
+        # to the temporary test database.
         self.connection_patch = patch(
             "controllers.auth.db.get_connection",
             side_effect=lambda: self.real_get_connection(self.db_path),
         )
         self.connection_patch.start()
 
-        # Make sure session state does not leak between tests.
+        # Prevent session state from leaking between tests.
         log_out()
 
     def tearDown(self):
-        """Clean up the patch, session, and temporary database."""
+        """Clean up the patch, session state, and temporary database."""
         log_out()
         self.connection_patch.stop()
         self.temp_dir.cleanup()
@@ -60,7 +60,7 @@ class TestAuthSystem(unittest.TestCase):
         )
 
         self.assertIsInstance(user_id, int)
-        self.assertEqual(getCurrentuser(), user_id)
+        self.assertEqual(get_current_user_id(), user_id)
 
         conn = self.real_get_connection(self.db_path)
         try:
@@ -135,6 +135,13 @@ class TestAuthSystem(unittest.TestCase):
                 "securePassword123",
             )
 
+    def test_empty_email_fails(self):
+        with self.assertRaises(ValidationError):
+            sign_up(
+                "",
+                "securePassword123",
+            )
+
     def test_short_password_fails(self):
         with self.assertRaises(ValidationError):
             sign_up(
@@ -149,7 +156,7 @@ class TestAuthSystem(unittest.TestCase):
         )
 
         log_out()
-        self.assertIsNone(getCurrentuser())
+        self.assertIsNone(get_current_user_id())
 
         logged_in_user_id = log_in(
             "user@example.com",
@@ -157,7 +164,7 @@ class TestAuthSystem(unittest.TestCase):
         )
 
         self.assertEqual(logged_in_user_id, original_user_id)
-        self.assertEqual(getCurrentuser(), original_user_id)
+        self.assertEqual(get_current_user_id(), original_user_id)
 
     def test_log_in_normalizes_email(self):
         original_user_id = sign_up(
@@ -173,6 +180,7 @@ class TestAuthSystem(unittest.TestCase):
         )
 
         self.assertEqual(logged_in_user_id, original_user_id)
+        self.assertEqual(get_current_user_id(), original_user_id)
 
     def test_log_in_wrong_password_fails(self):
         sign_up(
@@ -180,11 +188,15 @@ class TestAuthSystem(unittest.TestCase):
             "correctPass123",
         )
 
+        log_out()
+
         with self.assertRaises(AuthError):
             log_in(
                 "user@example.com",
                 "wrongPass999",
             )
+
+        self.assertIsNone(get_current_user_id())
 
     def test_log_in_nonexistent_user_fails(self):
         with self.assertRaises(AuthError):
@@ -193,9 +205,13 @@ class TestAuthSystem(unittest.TestCase):
                 "anyPass123",
             )
 
+        self.assertIsNone(get_current_user_id())
+
     def test_empty_login_fails(self):
         with self.assertRaises(ValidationError):
             log_in("", "")
+
+        self.assertIsNone(get_current_user_id())
 
     def test_log_out_clears_session(self):
         sign_up(
@@ -203,11 +219,11 @@ class TestAuthSystem(unittest.TestCase):
             "securePassword123",
         )
 
-        self.assertIsNotNone(getCurrentuser())
+        self.assertIsNotNone(get_current_user_id())
 
         log_out()
 
-        self.assertIsNone(getCurrentuser())
+        self.assertIsNone(get_current_user_id())
 
 
 if __name__ == "__main__":
