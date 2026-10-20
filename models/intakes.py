@@ -96,3 +96,26 @@ def get_latest_intake(conn, user_id):
     for field in _JSON_FIELDS:
         intake[field] = json.loads(intake[field])
     return intake
+
+
+def update_latest_weekly_hours(conn, user_id, weekly_hours):
+    """
+    Settings page: change weekly_hours on the user's LATEST intake row, in
+    place (does not create a new intake, so intake history stays untouched).
+
+    Returns True if a row was updated, False if the user has no intake yet.
+    """
+    cur = conn.execute(
+        """
+        UPDATE intakes SET weekly_hours = ?
+        WHERE id = (
+            SELECT id FROM intakes
+            WHERE user_id = ?
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+        )
+        """,
+        (weekly_hours, user_id),
+    )
+    conn.commit()
+    return cur.rowcount == 1
