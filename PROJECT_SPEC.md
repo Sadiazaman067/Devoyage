@@ -19,7 +19,7 @@ We all use AI tools to research and build separately. AI output is only consiste
 | Arnav | Backend Lead (controllers, application logic, backend architecture \+ integration) |
 | Sugam | AI Integration / Service — current responsibility: Anthropic integration, prompting, AI-response handling, validation, and AI-service prototyping  |
 | Sadia | Database (Models) \+ config/settings file |
-| Testing / QA | Owner TBD, decide before the Phase 1 gate is signed off (Activity 4 is a graded deliverable) |
+| Testing / QA | Rotates by phase (see Decision Log); the tester for each phase is named at the start of that phase |
 
    ### **Ownership boundaries going forward**
 
@@ -56,28 +56,38 @@ Decided:
 * (09/28) Tami's Frontend role and Sadia's Database/Models role remain unchanged.  
 * (09/28) The new responsibility boundaries are forward-looking only. They do not reassign credit for work performed before this decision.
 * (10/01) Settings Page scope decided: three persistent, per-user settings — theme (light/dark), editable weekly-hours (reuses intakes.weekly_hours), and account management (change password, change email) — persisted in a new settings table plus an update to the user's latest intake row, not config.ini, per the Phase 3 rule that app preferences stay in .ini and user data stays in the DB. Also added two roadmap actions reachable from Settings: Regenerate Roadmap (reuses existing generate_roadmap(user_id) — for when circumstances change) and Clear Roadmap Data (new clear_roadmap_data(user_id) — full reset; does not touch intake history).
+* (10/06) Weekly Focus Panel (Milestone 2 dashboard feature) deferred: stays in the submitted features doc, built only after Phases 1-3 are done.
+* (10/06) Milestone 2 pages declared in the submitted features doc: Intake, Career Paths, Resources Hub, Portfolio Log. AI Chat and Friends stay "if we have time."
+* (10/13) Names: the Module Contract names are the source of truth (`log_out`, `AuthError`, `ValidationError`). Code is renamed to match the spec, not the other way around.
+* (10/13) Errors: `AuthError`, `ValidationError`, and `AIServiceError` live in one shared errors file. Arnav names and places it, then adds the path under Errors in the Module Contract.
+* (10/13) Login routing: after a successful `log_in`, the app calls `has_completed_intake(user_id)`. Users with no intake go to the intake screen; everyone else goes to the dashboard.
+* (10/13) `generate_roadmap(user_id)` saves the roadmap and returns the full roadmap, in the same shape as `get_current_roadmap`.
+* (10/13) Intake: the "If yes, link(s)" box is removed (`deployed` stays `yes | no`). `none` can't be combined with other answers in coursework or carrying. The screen enforces it and the controller rejects it with `ValidationError`.
+* (10/13) Theme: each user's theme is saved in the `settings` table. `config.ini` holds only app-wide defaults (default theme, database path), because it's committed to the public repo.
+* (10/13) Startup: `main.py` calls `init_db` once at startup so the tables exist before any screen runs.
+* (10/13) Session: one `get_current_user_id()` in the controller layer will replace screens passing user_id to each other. Planned for after the Phase 1 switch.
+* (10/13) Testing/QA: the tester role rotates. The tester for each phase is named at the start of that phase, runs that phase's gate checklist, and records the results.
+* (10/19) Theme changed: each user's theme is saved in config.ini (sections like `[user_3]`), because the course requires the settings page's settings to persist in a .ini file. No settings table, and sign_up does not create a settings row. config.ini is generated on first run from the defaults in config.py and is not committed. Weekly hours and account changes still save to the database. Replaces the theme parts of the 10/01 and 10/13 decisions.
+* (10/19) Shared errors: `AuthError`, `ValidationError`, and `AIServiceError` live in `exceptions.py` at the project root. Every layer imports them from there.
+* (10/19) AI service contract agreed: `generate_roadmap_from_intake(intake_data: dict) -> dict` in services/ai.py, raising `AIServiceError` on failure. Details in the AI-service contract.
+* (10/19) Model-layer function names agreed, including the Settings ones (update_latest_weekly_hours, update_email, update_password_hash, clear_roadmap_data) and config.get_user_theme / set_user_theme. Full list in the Model-layer contract.
 
 Open (fill in as decided, with date):
-
-* Testing/QA owner: decide before the Phase 1 gate can be signed off (Activity 4, the Testing & QA plan, is graded)  
-* Sadia's model-layer function names: finalize them and add them to the Module Contract  
 * Whether the `users` model needs a username or display-name field in addition to the currently specified fields  
-* Whether `log_in` needs an intake-completion check before routing the user to the dashboard  
-* Which four "additional pages" we declare for Milestone 2 (proposal below)  
-* Exact controller-facing function/signature exposed by `services/ai.py`; do not introduce a new shared function name until the team agrees on it
+* Who writes Activity 4 (Testing & QA plan)
 
 ## **Course requirements mapping (from the Semester Project Outline)**
 
 The app must have: a dashboard homepage with 3+ features; 4 additional pages each focused on a feature set; a settings page whose settings persist in a .ini/config file; a local or remote database; MVC architecture; Python/Kivy only.
 
-Proposed mapping (finalize at Milestone 2):
+Mapping (declared in the submitted features doc):
 
 * Dashboard (3+ features): roadmap steps with reasoning, the "not now" list, progress tracking. That is three features on one screen, requirement met by our Tier 1 core.  
 * Additional page 1: Intake questionnaire  
-* Additional page 2: Career paths breakdown (Tier 2, F6)  
-* Additional page 3: Resources hub (Tier 2, F7)  
-* Additional page 4: Login/account page, or AI chat (F8) if schedule allows; decide at Milestone 2  
-* Settings page: three persistent per-user preferences — theme (light/dark), editable weekly-hours, and account management (change password, change email) — plus two roadmap actions: Regenerate Roadmap (for when life changes and the current plan no longer fits) and Clear Roadmap Data (a full reset to start over). The three preferences persist in the database, not config.ini, since they're user data, not app-wide settings (see 10/01 Decision Log and the Phase 3 rule on app preferences vs. user data). Regenerate reuses the existing generate_roadmap(user_id); Clear is a new function (below).
+* Additional page 2: Career paths  
+* Additional page 3: Resources hub  
+* Additional page 4: Portfolio log
+* Settings page: three persistent per-user preferences — theme (light/dark), editable weekly-hours, and account management (change password, change email) — plus two roadmap actions: Regenerate Roadmap (for when life changes and the current plan no longer fits) and Clear Roadmap Data (a full reset to start over). Theme persists per user in config.ini, which covers the .ini requirement; weekly-hours and account changes persist in the database (see 10/19 Decision Log). Regenerate reuses the existing generate_roadmap(user_id); Clear is a new function (below).
 
 ## **Shared Vocabulary**
 
@@ -94,12 +104,14 @@ Use these words to mean exactly this, in code, docs, and AI chats:
 
 * devoyage/  
 *   main.py            \# app entry point, ScreenManager setup  
-*   config.ini         \# settings (course requirement)  
+*   config.ini         \# generated on first run from config.py; app defaults + each user's theme (course requirement); not committed
+*   config.py          \# Sadia: reads/writes config.ini (app defaults, per-user theme)  
+*   exceptions.py      \# shared errors: AuthError, ValidationError, AIServiceError
 *   models/            \# Sadia: database access, one module per table group  
 *   views/             \# Tami: Kivy screens (.py) \+ layout (.kv files)  
 *   controllers/       \# Arnav: application logic between views, services, and models  
 *   services/ai.py     \# Sugam: Anthropic SDK calls, prompt, AI-response handling  
-    tests/             \# Testing/QA owner TBD: pytest suites \+ manual test scripts
+    tests/             \# pytest suites \+ manual test scripts
 
 Views never touch the database directly, and models never import Kivy. Everything crosses through controllers. That separation IS the MVC requirement being graded.
 
@@ -220,13 +232,7 @@ Sadia owns the implementation in SQLite; everyone conforms to these names. All n
 * title  
 * reasoning (why to skip it for now)
 
-**settings**
-
-* user\_id (primary key, foreign key \-\> users.id) — one row per user, created at sign\_up with theme `light`  
-* theme: `light | dark`  
-* updated\_at
-
-(weekly_hours is not duplicated here — it's updated in place on the user's latest intakes row. Email/password are updated in place on users.)
+Theme has no table: it's saved per user in config.ini (see 10/19 Decision Log). weekly_hours is updated in place on the user's latest intakes row; email and password are updated in place on users.
 
 Tier 2 tables (resources, career paths, chat) get added here before anyone builds them.
 
@@ -253,7 +259,7 @@ Forward owner: Arnav.
 * `log_out()` (clears current session state)  
 * Session: the controller layer tracks the logged-in user\_id in one place; views never pass identity around themselves.
 
-> Open question: whether successful `log_in` also needs an intake-completion check before the application decides whether to route to `intake` or `dashboard`. Until decided, do not silently change the existing `log_in` contract.
+> Routing (decided 10/13): after `log_in` succeeds, the app calls `has_completed_intake(user_id)` (in controllers/intake.py) to pick `intake` or `dashboard`. `log_in` itself still just returns user_id.
 
 ### **Intake and roadmap (controllers/intake.py, controllers/roadmap.py)**
 
@@ -263,9 +269,10 @@ This is an ownership boundary going forward. It does **not** reassign credit for
 
 Existing controller contract:
 
-* `save_intake(user_id, intake_data) -> intake_id` (intake\_data validated by Pydantic against the intakes shape)  
-* `generate_roadmap(user_id) -> roadmap` (gets the latest intake, uses the AI service, validates the application flow, saves through Sadia's models, returns)  
-* `get_current_roadmap(user_id) -> roadmap with steps ordered by position + not_now_items`  
+* `save_intake(user_id, intake_data) -> intake_id` (intake_data validated by Pydantic against the intakes shape; raises `ValidationError` if `none` is combined with other answers in coursework or carrying)
+* `has_completed_intake(user_id) -> bool` (True if the user has at least one saved intake; used for login routing)
+* `generate_roadmap(user_id) -> roadmap` (gets the latest intake, uses the AI service, validates, saves through Sadia's models, and returns the full roadmap in the same shape as `get_current_roadmap`)
+* `get_current_roadmap(user_id) -> roadmap with steps ordered by position + not_now_items`
 * `set_step_status(step_id, status) -> None` (status must be `pending` or `done`)
 * `clear_roadmap_data(user_id) -> None` (deletes all of the user's roadmaps, including history, along with their steps and not-now items, for a full reset; does not touch intake history, so the user can regenerate from their existing intake or redo intake first)
 
@@ -273,8 +280,8 @@ Existing controller contract:
 
 Forward owner: Arnav.
 
-* `get_settings(user_id) -> settings_data` (combines theme from the settings table with weekly_hours from the user's latest intake, for the Settings screen to display)
-* `update_theme(user_id, theme) -> None`
+* `get_settings(user_id) -> settings_data` (combines the theme from config.ini via config.get_user_theme with weekly_hours from the user's latest intake, for the Settings screen to display)
+* `update_theme(user_id, theme) -> None` (saves through config.set_user_theme; only `light` or `dark`)
 * `update_weekly_hours(user_id, weekly_hours) -> None` (updates weekly_hours on the user's latest intake row; does not create a new intake)
 * `change_password(user_id, current_password, new_password) -> None` (raises AuthError if current_password is wrong; reuses the hashing logic from sign_up)
 * `change_email(user_id, new_email) -> None` (raises on duplicate email, same as sign_up)
@@ -283,13 +290,40 @@ Forward owner: Arnav.
 
 Owner: Sadia.
 
-The model-layer function names still need to be finalized and recorded here.
+Agreed 10/19. Every function takes an open sqlite3 connection first; the controller opens and closes it.
 
-Until that decision is made:
+`models/db.py`
 
-* controllers use the agreed model interfaces already present in the codebase;  
-* this document does not invent new model function names;  
-* once the team agrees on the model API, the exact function signatures are added here.
+* `get_connection(db_path=None) -> sqlite3.Connection`
+* `init_db(conn) -> None` (creates every table if missing; called once at startup from main.py)
+
+`models/users.py`
+
+* `create_user(conn, email, password_hash) -> user_id` (raises sqlite3.IntegrityError if the email is taken; the controller turns it into AuthError)
+* `get_user_by_email(conn, email) -> user dict or None`
+* `get_user_by_id(conn, user_id) -> user dict or None`
+* `update_email(conn, user_id, new_email) -> None` (raises sqlite3.IntegrityError if the email is taken)
+* `update_password_hash(conn, user_id, password_hash) -> None`
+
+`models/intakes.py`
+
+* `save_intake(conn, user_id, intake_data) -> intake_id`
+* `get_latest_intake(conn, user_id) -> intake dict or None` (list fields decoded back to lists)
+* `update_latest_weekly_hours(conn, user_id, weekly_hours) -> bool` (False if the user has no intake)
+
+`models/roadmaps.py`
+
+* `create_roadmap(conn, user_id, intake_id, steps, not_now_items) -> roadmap_id` (one transaction; nothing is saved if any row fails)
+* `get_current_roadmap(conn, user_id) -> roadmap dict or None` (latest roadmap, steps in position order, plus its not-now items)
+* `set_step_status(conn, step_id, status, user_id) -> bool` (status must be `pending` or `done`, else ValueError; only updates a step this user owns; False if nothing matched)
+* `clear_roadmap_data(conn, user_id) -> None` (deletes all of the user's roadmaps with their steps and not-now items; intakes are untouched)
+
+`config.py` (not a model, but the Settings controller calls it)
+
+* `get_user_theme(user_id, path=None) -> str` (falls back to the app default theme)
+* `set_user_theme(user_id, theme, path=None) -> None` (raises ValueError unless `light` or `dark`)
+
+Not built yet: update_email, update_password_hash, update_latest_weekly_hours, clear_roadmap_data (Sadia's next PR).
 
 ### **AI-service contract**
 
@@ -311,9 +345,13 @@ The service receives the structured information needed for generation from the c
 * a validated result conforming to the LLM Output Contract; or  
 * `AIServiceError`.
 
-**The exact shared Python function name/signature between `controllers/roadmap.py` and `services/ai.py` is still open and must be agreed on before being added to this Module Contract.**
+Agreed 10/19:
 
-Do not invent a permanent service function name in individual code or AI chats before that agreement.
+* `generate_roadmap_from_intake(intake_data: dict) -> dict`
+* intake_data: the user's intake answers only, the same shape save_intake takes. No id, user_id, created_at, database connection, or session.
+* Returns: the validated dict from the LLM Output Contract (`steps` and `not_now`). Never raw text, a JSON string, or an SDK response object.
+* Raises: `AIServiceError` from exceptions.py when a valid result still can't be produced after the one retry.
+* The controller saves `not_now` as not-now items; `get_current_roadmap` returns them as `not_now_items`.
 
 The AI service does NOT:
 
@@ -327,6 +365,8 @@ The AI service does NOT:
 ### **Errors**
 
 Controllers/services raise our own exception types (e.g. `AuthError`, `ValidationError`, `AIServiceError`) with a human-readable message.
+
+All three live in `exceptions.py` at the project root (decided 10/19). Every layer imports them from there; no layer defines its own copy.
 
 Views catch them and show the message; views never crash on an expected failure.
 
@@ -349,7 +389,7 @@ Rules:
 * `services/ai.py` validates every required field exists before anything is returned to the controller.  
 * Malformed response: strip markdown fences if present, retry once, then raise `AIServiceError`.  
 * Never save a partial roadmap.  
-* The API key lives in a .env file (gitignored) or environment variable, NEVER in code, NEVER in config.ini (config.ini is committed; the key is a secret).  
+* The API key lives in a .env file (gitignored) or environment variable, NEVER in code, NEVER in config.ini (config.ini is a plain-text settings file; the key is a secret).
 * reasoning fields must reference the user's actual intake (their hours, their carrying list, their level), not generic advice. This is the product's whole identity.
 
 ## **AI-service development rule**
@@ -441,10 +481,7 @@ This prototype is independent of the production MVC application.
 
 #### **Phase 1 test checklist**
 
-The Phase 1 gate remains concrete even though the formal Testing/QA owner is still TBD.
-
-The person assigned by the team to perform/sign off the Phase 1 checklist must verify:
-
+The Phase 1 tester (named at the start of the phase, see Decision Log) must verify:
 * two users see only their own data;  
 * every intake field round-trips;  
 * password appears nowhere in plain text;  
@@ -459,8 +496,6 @@ Phase 2 opens only when:
 3. blocking failures discovered by the checklist are resolved;  
 4. the team records who performed the QA sign-off.
 
-The permanent Testing/QA owner can still remain an open organizational item, but the Phase 1 gate cannot be waived because the role is unresolved.
-
 ### **Phase 2: The Brain (Roadmap \+ Not-now, features F3 \+ F4)**
 
 #### **Tami — Frontend**
@@ -473,7 +508,7 @@ The permanent Testing/QA owner can still remain an open organizational item, but
 
   #### **Arnav — Backend Lead / Controllers**
 
-* finalize the controller-to-AI-service contract with Sugam and record the exact shared signature in the Module Contract before production integration;  
+* (done 10/19) controller-to-AI-service contract agreed and recorded in the Module Contract;
 * implement and own `generate_roadmap`;  
 * implement and own `get_current_roadmap`;  
 * retrieve the user's latest intake through Sadia's model layer;  
@@ -494,7 +529,7 @@ Arnav owns the integration boundary, not Sugam's internal AI implementation.
 * dashboard/current-roadmap read;  
 * regeneration policy (keep history, current \= latest);  
 * user/data isolation;  
-* finalize required model-layer function names with the team and add them to the Module Contract.
+* (done 10/19) model-layer function names agreed and recorded in the Module Contract.
 
   #### **Sugam — AI Service**
 
@@ -632,7 +667,7 @@ The gate remains testable:
 * View \-\> Controller \-\> AI Service \-\> Model boundaries are preserved;  
 * blocking Phase 1/2 regression failures are resolved.
 
-The formal Testing/QA owner, once assigned, coordinates the cross-system gate. Component owners still test their own areas.
+That phase's tester coordinates the cross-system gate. Component owners still test their own areas.
 
 ### **Phase 3: Alive (Progress \+ Settings, feature F5 \+ course-required settings page)**
 
@@ -654,7 +689,7 @@ The formal Testing/QA owner, once assigned, coordinates the cross-system gate. C
 
 * persistence required for step status;  
 * settings that belong in the DB vs `.ini`;  
-* (resolved 10/01: settings table holds theme; weekly_hours stays on intakes; config.ini remains app-level only — see Decision Log)  
+* (resolved 10/19: theme is per user in config.ini; weekly_hours stays on intakes; no settings table — see Decision Log)
 * rule: app preferences in `.ini`, user data in DB;  
 * model/config helpers required by the controller.
 
@@ -784,7 +819,7 @@ Before prototype code enters `services/ai.py`:
 
 ## **Testing / QA**
 
-Testing remains required even while the formal Testing/QA owner is TBD.
+Testing is required every phase. The tester role rotates by phase (see Decision Log)
 
 Each component owner is responsible for basic testing of their own area:
 
@@ -793,16 +828,15 @@ Each component owner is responsible for basic testing of their own area:
 * Sadia: models/database/config;  
 * Sugam: AI-service behavior.
 
-The formal Testing/QA owner, once selected, coordinates:
+Each phase's tester coordinates:
 
 * phase checklists;  
 * cross-component tests;  
 * regression testing;  
 * QA documentation;  
-* graded Activity 4 work;  
 * gate sign-off.
 
-Until that person is selected, the team must still explicitly assign someone to execute and record each required gate checklist. An unassigned QA role does not remove the gate.
+No phase moves forward until its tester has run and recorded the gate checklist.
 
 ## **Working agreements**
 
@@ -825,4 +859,3 @@ Until that person is selected, the team must still explicitly assign someone to 
 * The Decision Log gets a dated line every time something is decided, including in group chat.  
 * Stuck for more than an hour: post in the group chat with what you tried. Do not silently rewrite someone else's area to unblock yourself.  
 * Grade-driven discipline (documentation and process are over half the rubric): meeting minutes for EVERY meeting, submitted every 2 weeks (15% of grade, lead tracks this); individual journals updated at every milestone (graded separately); the Figma design document is worth 20% and gets real time, not leftovers.  
-*
