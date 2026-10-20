@@ -71,7 +71,9 @@ Requirements:
 - Every not_now item must contain: title, reasoning.
 - Make recommendations realistic for the student's weekly_hours and credit_load.
 - Explain recommendations using their actual skills, coursework, and commitments.
+- Every reasoning field must reference concrete facts from the student's intake where relevant, such as skills, coursework, workload, or goals.
 - Do not invent experiences or qualifications not stated in the intake.
+
 
 Return this JSON structure:
 {{
