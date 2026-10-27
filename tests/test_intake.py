@@ -1,6 +1,6 @@
 import pytest
-from pydantic import ValidationError
 
+from exceptions import ValidationError
 from controllers import intake as intake_controller
 from models import db, users, intakes
 
@@ -142,7 +142,10 @@ def test_intake_round_trip(test_database):
 
 
 def test_invalid_intake_is_rejected(test_database):
-    """Pydantic should reject values outside the allowed schema."""
+    """
+    Invalid schema data should be converted from Pydantic's error
+    into the project's shared ValidationError.
+    """
 
     user_id = test_database["user1_id"]
 
@@ -166,6 +169,94 @@ def test_invalid_intake_is_rejected(test_database):
         conn.close()
 
     assert saved_intake is None
+
+
+def test_coursework_none_cannot_be_combined(test_database):
+    """
+    'none' cannot be selected together with actual coursework.
+    """
+
+    user_id = test_database["user1_id"]
+
+    bad_data = valid_intake_data()
+    bad_data["coursework"] = ["none", "dsa"]
+
+    with pytest.raises(ValidationError):
+        intake_controller.save_intake(
+            user_id,
+            bad_data,
+        )
+
+    conn = test_database["get_connection"](test_database["path"])
+
+    try:
+        saved_intake = intakes.get_latest_intake(conn, user_id)
+    finally:
+        conn.close()
+
+    assert saved_intake is None
+
+
+def test_carrying_none_cannot_be_combined(test_database):
+    """
+    'none' cannot be selected together with actual commitments.
+    """
+
+    user_id = test_database["user1_id"]
+
+    bad_data = valid_intake_data()
+    bad_data["carrying"] = ["none", "research"]
+
+    with pytest.raises(ValidationError):
+        intake_controller.save_intake(
+            user_id,
+            bad_data,
+        )
+
+    conn = test_database["get_connection"](test_database["path"])
+
+    try:
+        saved_intake = intakes.get_latest_intake(conn, user_id)
+    finally:
+        conn.close()
+
+    assert saved_intake is None
+
+
+def test_coursework_none_alone_is_valid(test_database):
+    """
+    'none' by itself is a valid coursework selection.
+    """
+
+    user_id = test_database["user1_id"]
+
+    data = valid_intake_data()
+    data["coursework"] = ["none"]
+
+    intake_id = intake_controller.save_intake(
+        user_id,
+        data,
+    )
+
+    assert isinstance(intake_id, int)
+
+
+def test_carrying_none_alone_is_valid(test_database):
+    """
+    'none' by itself is a valid commitments selection.
+    """
+
+    user_id = test_database["user1_id"]
+
+    data = valid_intake_data()
+    data["carrying"] = ["none"]
+
+    intake_id = intake_controller.save_intake(
+        user_id,
+        data,
+    )
+
+    assert isinstance(intake_id, int)
 
 
 def test_users_have_separate_intakes(test_database):
