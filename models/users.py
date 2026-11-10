@@ -49,3 +49,23 @@ def get_user_by_id(conn, user_id):
         (user_id,),
     ).fetchone()
     return dict(row) if row else None
+
+def update_email(conn, user_id, new_email):
+    """
+    Change one user's email. The controller normalizes it first (strip +
+    lowercase), same as sign_up.
+
+    Raises sqlite3.IntegrityError if another account already uses that email
+    (the controller turns that into an AuthError). Returns None.
+    """
+    conn.execute("UPDATE users SET email = ? WHERE id = ?", (new_email, user_id))
+    conn.commit()
+
+
+def update_password_hash(conn, user_id, password_hash):
+    """
+    Replace one user's stored password hash. The controller hashes the new
+    password first -- this only ever stores a hash. Returns None.
+    """
+    conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id))
+    conn.commit()
