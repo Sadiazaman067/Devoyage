@@ -140,12 +140,28 @@ def get_current_roadmap(conn, user_id):
     return roadmap
 
 
-def set_step_status(conn, step_id, status):
-    """status must be exactly 'pending' or 'done' -- the two Tier 1 strings."""
+def set_step_status(conn, step_id, status, user_id):
+    """
+    status must be exactly 'pending' or 'done' -- the two Tier 1 strings.
+
+    user_id is REQUIRED (the logged-in user). The update only happens if the
+    step belongs to one of that user's roadmaps, so one user can never change
+    another user's step, and a controller can't skip the ownership check by
+    accident.
+
+    Returns True if a step was updated, False if nothing matched (wrong id,
+    or the step belongs to someone else).
+    """
     if status not in ("pending", "done"):
         raise ValueError(f"status must be 'pending' or 'done', got {status!r}")
-    conn.execute(
-        "UPDATE roadmap_steps SET status = ? WHERE id = ?",
-        (status, step_id),
+
+    cur = conn.execute(
+        """
+        UPDATE roadmap_steps SET status = ?
+        WHERE id = ?
+          AND roadmap_id IN (SELECT id FROM roadmaps WHERE user_id = ?)
+        """,
+        (status, step_id, user_id),
     )
     conn.commit()
+    return cur.rowcount == 1

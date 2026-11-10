@@ -93,7 +93,7 @@ def main():
 
     # --- progress tracking ---
     first_step_id = current["steps"][0]["id"]
-    roadmaps.set_step_status(conn, first_step_id, "done")
+    roadmaps.set_step_status(conn, first_step_id, "done", user_id=alice_id)
     refreshed = roadmaps.get_current_roadmap(conn, alice_id)
     assert refreshed["steps"][0]["status"] == "done"
     print("[ok] roadmap_steps: status updates and persists")
