@@ -15,6 +15,8 @@ UI must not freeze"):
                  background thread and show "Building your roadmap".
   3. ERROR    -- generation raised AIServiceError: show the error card
                  with "Try again" and "Edit my intake".
+  If generation raises ValidationError (the real controller does this when
+  the user has no intake yet), the user is sent to the intake screen.
 
 Layout lives in dashboard.kv. This file holds the behaviour; pure data
 logic (progress text, dates, layout breakpoint) is in dashboard_helpers.py.
@@ -42,11 +44,11 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 
 # ---- Controller calls: the ONE place this screen imports them ---------------
-# Today these come from dev_stubs/ (controllers/roadmap.py isn't on main).
-# To use Arnav's real controller, flip the import block in
-# views/controllers_api.py -- nothing in this file changes.
+# These are the real controllers as of 11/11. To go back to the stubs, flip
+# the import blocks in views/controllers_api.py -- nothing here changes.
 from views.controllers_api import (
     AIServiceError,
+    ValidationError,
     generate_roadmap,
     get_current_roadmap,
     log_out,
@@ -316,6 +318,11 @@ class DashboardScreen(Screen):
         # ------------------------------------------------------------------
         try:
             roadmap = generate_roadmap(user_id)
+        except ValidationError:
+            # The real controller raises this when the user has no intake yet
+            # ("Complete the intake first."). "Try again" can't fix that, so
+            # send them to the intake instead of showing the error card.
+            Clock.schedule_once(partial(self._on_needs_intake, generation_id))
         except AIServiceError as error:
             # Expected failure (bad AI response, network, etc.).
             # str(error) is taken NOW: Python deletes `error` when this except
@@ -342,6 +349,12 @@ class DashboardScreen(Screen):
             return
         self._generating = False
         self.show_error(message)
+
+    def _on_needs_intake(self, generation_id, dt):
+        if generation_id != self._generation_id:
+            return
+        self._generating = False
+        self.edit_intake()
 
     # ---- what's on screen -------------------------------------------------
 
