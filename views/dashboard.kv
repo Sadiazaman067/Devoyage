@@ -581,81 +581,10 @@
             size: self.size
 
     BoxLayout:
-        orientation: "vertical"
-
-        # ---- Top bar ----
-        BoxLayout:
-            size_hint_y: None
-            height: dp(68)
-            padding: [dp(16) if root.stacked else dp(48), 0]
-            spacing: dp(10)
-            canvas.before:
-                Color:
-                    rgba: theme.C.top_bar
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-                Color:
-                    rgba: theme.C.border
-                Rectangle:
-                    # 1dp bottom border
-                    pos: self.x, self.y
-                    size: self.width, dp(1)
-
-            Label:
-                text: "D"
-                bold: True
-                font_size: "15sp"
-                color: theme.C.on_accent
-                size_hint: None, None
-                size: dp(28), dp(28)
-                pos_hint: {"center_y": 0.5}
-                canvas.before:
-                    Color:
-                        rgba: theme.C.accent
-                    RoundedRectangle:
-                        pos: self.pos
-                        size: self.size
-                        radius: [dp(8)]
-            Label:
-                text: "Devoyage"
-                bold: True
-                font_size: "20sp"
-                color: theme.C.text_body
-                size_hint: None, None
-                size: self.texture_size
-                pos_hint: {"center_y": 0.5}
-
-            Widget:
-                # spacer: pushes the nav to the right
-
-            # Current page: shown highlighted, not clickable.
-            DashPill:
-                text: "Roadmap"
-                fill: theme.C.accent_soft
-                color: theme.C.accent
-                font_size: "14sp"
-                height: dp(32)
-                pos_hint: {"center_y": 0.5}
-            DashPillButton:
-                text: "Settings"
-                fill: theme.C.clear
-                color: theme.C.text_muted
-                font_size: "14sp"
-                height: dp(32)
-                pad_x: dp(24)
-                disabled: not root.has_settings
-                pos_hint: {"center_y": 0.5}
-                on_release: root.go_to_settings()
-            DashPillButton:
-                text: "Log out"
-                fill: theme.C.clear
-                color: theme.C.text_faint
-                font_size: "14sp"
-                height: dp(32)
-                pad_x: dp(24)
-                pos_hint: {"center_y": 0.5}
-                on_release: root.log_out_user()
+        # Sidebar replaces the old top bar (Milestone 3 design). Log out and
+        # Settings live in the sidebar now; see views/components.kv.
+        Sidebar:
+            active: "dashboard"
 
         # ---- Body: dashboard.py puts exactly one state view in here ----
         BoxLayout:

@@ -1,0 +1,82 @@
+"""
+Signed-in pages that exist in the sidebar but aren't built yet: Career
+Paths, Resources Hub, Portfolio Log, Settings.
+
+Each one is an AppPage (sidebar + header) with a "coming soon" card, so the
+navigation works end to end today. When a page is built, give it its own
+views/<page>.py and .kv and remove it from here.
+"""
+from kivy.metrics import dp
+
+from views.components import AppPage, Card, Icon
+from kivy.uix.label import Label
+from views.theme import C
+
+
+class _PlaceholderPage(AppPage):
+    icon_name = "sparkles"
+    blurb = ""
+
+    def on_kv_post(self, base_widget):
+        card = Card(
+            orientation="vertical",
+            size_hint=(None, None),
+            size=(dp(520), dp(170)),
+            padding=[dp(24), dp(22)],
+            spacing=dp(10),
+        )
+        card.add_widget(Icon(name=self.icon_name, color=C.blue))
+        title = Label(
+            text="Coming soon",
+            bold=True,
+            font_size="18sp",
+            color=C.ink,
+            halign="left",
+            size_hint_y=None,
+            height=dp(26),
+        )
+        title.bind(size=lambda inst, size: setattr(inst, "text_size", size))
+        body = Label(
+            text=self.blurb,
+            font_size="15sp",
+            color=C.muted,
+            halign="left",
+            valign="top",
+        )
+        body.bind(size=lambda inst, size: setattr(inst, "text_size", size))
+        card.add_widget(title)
+        card.add_widget(body)
+        self.ids.content.add_widget(card)
+        self.ids.content.add_widget(Label())  # spacer pushes the card up
+
+
+class CareerPathsScreen(_PlaceholderPage):
+    nav_name = "career_paths"
+    title = "Career Paths"
+    subtitle = "What each path in CS looks like, and how to start."
+    icon_name = "briefcase"
+    blurb = "Software engineering, data, security, and machine learning: what the work is, the skills it needs, and a first step for each."
+
+
+class ResourcesScreen(_PlaceholderPage):
+    nav_name = "resources"
+    title = "Resources Hub"
+    subtitle = "Tools, courses, and communities, picked by our team."
+    icon_name = "book-open"
+    blurb = "Every resource here is picked by someone on the team, with one line on why it's on the list."
+
+
+class PortfolioScreen(_PlaceholderPage):
+    nav_name = "portfolio"
+    title = "Portfolio Log"
+    subtitle = "Keep track of what you've actually done."
+    icon_name = "list"
+    blurb = "Log your projects, courses, certificates, and hackathons, and link them to the roadmap steps they complete."
+
+
+class SettingsScreen(_PlaceholderPage):
+    nav_name = "settings"
+    title = "Settings"
+    subtitle = "Theme, weekly hours, and your account."
+    icon_name = "settings"
+    blurb = "Switch between light and dark mode, change your weekly hours, update your email or password, and regenerate or clear your roadmap."

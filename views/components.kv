@@ -1,0 +1,292 @@
+#:import theme views.theme
+#:import icon views.icons.icon
+
+# Shared widgets for the Milestone 3 design. Classes are declared in
+# components.py. Colors come from views/theme.py, sizes are in dp/sp so the
+# app scales on high-DPI screens.
+
+
+# ---- Card -----------------------------------------------------------------
+<Card>:
+    canvas.before:
+        Color:
+            rgba: self.bg_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(self.radius)]
+        Color:
+            rgba: self.border_color
+        Line:
+            width: self.border_width
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(self.radius))
+
+
+# ---- Text helpers ---------------------------------------------------------
+# A label that wraps to its width and grows to fit its text.
+<WrapLabel@Label>:
+    color: theme.C.ink
+    text_size: self.width, None
+    size_hint_y: None
+    height: self.texture_size[1]
+    halign: "left"
+    valign: "top"
+
+<Icon>:
+    font_name: "Icons"
+    font_size: "20sp"
+    color: theme.C.ink
+    size_hint: None, None
+    size: dp(24), dp(24)
+    halign: "center"
+    valign: "middle"
+    text_size: self.size
+
+
+# ---- Chip -----------------------------------------------------------------
+<Chip>:
+    font_name: "InterSemiBold"
+    font_size: "13sp"
+    color: theme.C.blue
+    markup: True
+    size_hint: None, None
+    size: self.texture_size[0] + dp(20), dp(28)
+    halign: "center"
+    valign: "middle"
+    text_size: None, None
+    canvas.before:
+        Color:
+            rgba: self.fill
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.height / 2]
+
+
+# ---- Buttons --------------------------------------------------------------
+<BaseButton>:
+    size_hint: None, None
+    height: dp(44)
+    width: self.minimum_width
+    padding: [dp(18), 0]
+    spacing: dp(8)
+    canvas.before:
+        Color:
+            rgba: self.fill_down if self.state == "down" else self.fill
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
+        Color:
+            rgba: self.outline
+        Line:
+            width: 1
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(10))
+    Icon:
+        name: root.icon_name
+        color: root.text_color
+        font_size: "17sp"
+        size: (dp(18), dp(18)) if root.icon_name else (0, 0)
+        opacity: 1 if root.icon_name else 0
+        pos_hint: {"center_y": 0.5}
+    Label:
+        text: root.text
+        font_name: "InterSemiBold"
+        font_size: "15sp"
+        color: root.text_color
+        size_hint: None, None
+        size: self.texture_size
+        pos_hint: {"center_y": 0.5}
+
+<PrimaryButton>:
+    fill: theme.C.blue
+    fill_down: theme.C.accent_dark
+    text_color: theme.C.bg
+
+<GhostButton>:
+    fill: theme.C.bg
+    fill_down: theme.C.sidebar
+    outline: theme.C.line
+    text_color: theme.C.ink
+
+<DangerButton>:
+    fill: theme.C.bg
+    fill_down: theme.C.crimson_tint
+    outline: theme.C.danger_border
+    text_color: theme.C.crimson
+
+
+# ---- Text field -----------------------------------------------------------
+<TextField>:
+    radius: 10
+    size_hint_y: None
+    height: dp(48)
+    padding: [dp(14), 0]
+    spacing: dp(10)
+    Icon:
+        name: root.icon_name
+        color: theme.C.muted
+        font_size: "17sp"
+        size: (dp(20), dp(20)) if root.icon_name else (0, 0)
+        pos_hint: {"center_y": 0.5}
+    TextInput:
+        id: input
+        hint_text: root.hint_text
+        password: root.password
+        multiline: False
+        write_tab: False
+        font_size: "15sp"
+        foreground_color: theme.C.ink
+        hint_text_color: theme.C.text_faint
+        cursor_color: theme.C.blue
+        background_normal: ""
+        background_active: ""
+        background_color: 0, 0, 0, 0
+        padding: [0, (self.height - self.line_height) / 2]
+
+
+# ---- Sidebar --------------------------------------------------------------
+<NavItem>:
+    size_hint_y: None
+    height: dp(46)
+    padding: [dp(12), 0]
+    spacing: dp(12)
+    canvas.before:
+        Color:
+            rgba: theme.C.blue_tint if self.active else ((0.93, 0.93, 0.95, 1) if self.state == "down" else (0, 0, 0, 0))
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
+    Icon:
+        name: root.icon_name
+        color: theme.C.blue if root.active else theme.C.ink
+        pos_hint: {"center_y": 0.5}
+    Label:
+        text: root.text
+        font_name: "InterSemiBold" if root.active else "Inter"
+        font_size: "15sp"
+        color: theme.C.blue if root.active else theme.C.ink
+        halign: "left"
+        valign: "middle"
+        text_size: self.size
+
+<Sidebar>:
+    orientation: "vertical"
+    size_hint_x: None
+    width: dp(240)
+    padding: [dp(14), dp(22)]
+    spacing: dp(4)
+    canvas.before:
+        Color:
+            rgba: theme.C.sidebar
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgba: theme.C.line
+        Rectangle:
+            pos: self.right - dp(1), self.y
+            size: dp(1), self.height
+    BoxLayout:
+        size_hint_y: None
+        height: dp(56)
+        padding: [dp(10), 0, 0, dp(18)]
+        spacing: dp(10)
+        Icon:
+            name: "compass"
+            font_size: "24sp"
+            size: dp(28), dp(28)
+            pos_hint: {"center_y": 0.5}
+        Label:
+            text: "Devoyage"
+            bold: True
+            font_size: "22sp"
+            color: theme.C.ink
+            halign: "left"
+            valign: "middle"
+            text_size: self.size
+    NavItem:
+        text: "Dashboard"
+        icon_name: "house"
+        active: root.active == "dashboard"
+        on_release: root.go_to("dashboard")
+    NavItem:
+        text: "Career Paths"
+        icon_name: "briefcase"
+        active: root.active == "career_paths"
+        on_release: root.go_to("career_paths")
+    NavItem:
+        text: "Resources Hub"
+        icon_name: "book-open"
+        active: root.active == "resources"
+        on_release: root.go_to("resources")
+    NavItem:
+        text: "Portfolio Log"
+        icon_name: "list"
+        active: root.active == "portfolio"
+        on_release: root.go_to("portfolio")
+    NavItem:
+        text: "Settings"
+        icon_name: "settings"
+        active: root.active == "settings"
+        on_release: root.go_to("settings")
+    Widget:
+        # spacer: pushes Log out to the bottom
+    NavItem:
+        text: "Log out"
+        icon_name: "log-out"
+        on_release: root.log_out()
+
+
+# ---- Signed-in page base --------------------------------------------------
+# Sidebar on the left; on the right a header (title, subtitle, avatar) and a
+# `content` box each page fills in.
+<AppPage>:
+    canvas.before:
+        Color:
+            rgba: theme.C.bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        Sidebar:
+            active: root.nav_name
+        BoxLayout:
+            orientation: "vertical"
+            padding: [dp(36), dp(28), dp(36), dp(24)]
+            spacing: dp(22)
+            BoxLayout:
+                size_hint_y: None
+                height: dp(64)
+                BoxLayout:
+                    orientation: "vertical"
+                    Label:
+                        text: root.title
+                        bold: True
+                        font_size: "30sp"
+                        color: theme.C.ink
+                        halign: "left"
+                        valign: "bottom"
+                        text_size: self.size
+                    Label:
+                        text: root.subtitle
+                        font_size: "15sp"
+                        color: theme.C.muted
+                        halign: "left"
+                        valign: "top"
+                        text_size: self.size
+                Icon:
+                    name: "user"
+                    color: theme.C.blue
+                    size: dp(44), dp(44)
+                    pos_hint: {"top": 1}
+                    canvas.before:
+                        Color:
+                            rgba: theme.C.blue_tint
+                        Ellipse:
+                            pos: self.pos
+                            size: self.size
+            BoxLayout:
+                id: content
+                orientation: "vertical"
