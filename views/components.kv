@@ -43,6 +43,34 @@
     text_size: self.size
 
 
+<IconButton>:
+    color: theme.C.muted
+    font_size: "18sp"
+
+<TickBox>:
+    size_hint: None, None
+    size: dp(22), dp(22)
+    canvas:
+        Color:
+            rgba: theme.C.blue if self.checked else theme.C.bg
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(6)]
+        Color:
+            rgba: theme.C.blue if self.checked else theme.C.checkbox
+        Line:
+            width: 1.5
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(6))
+    Label:
+        font_name: "Icons"
+        text: icon("check") if root.checked else ""
+        font_size: "15sp"
+        color: theme.C.bg
+        pos: root.pos
+        size: root.size
+
+
 # ---- Chip -----------------------------------------------------------------
 <Chip>:
     font_name: "InterSemiBold"

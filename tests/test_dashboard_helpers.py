@@ -17,6 +17,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from views.dashboard_helpers import (  # noqa: E402
     count_done,
+    focus_step_indices,
+    progress_markup,
+    progress_percent,
+    short_time,
+    subtitle_text,
     eyebrow_text,
     format_generated_date,
     headline,
@@ -111,6 +116,41 @@ def test_stacked_layout_breakpoint():
     assert use_stacked_layout(899) is True
     assert use_stacked_layout(900) is False
     assert use_stacked_layout(1200) is False
+
+
+# ---- Milestone 3 dashboard (11/11) -----------------------------------------
+
+def _steps(*statuses):
+    return [{"id": i, "status": status} for i, status in enumerate(statuses, start=1)]
+
+
+def test_subtitle_text():
+    assert subtitle_text("2026-10-27 12:00:00") == "Your personalized roadmap for the semester · generated Oct 27"
+    assert subtitle_text(None) == "Your personalized roadmap for the semester"
+
+
+def test_progress_markup_and_percent():
+    steps = _steps("done", "pending", "pending", "pending", "pending", "pending")
+    assert progress_markup(steps) == "[b]1 of 6[/b] steps done"
+    assert progress_percent(steps) == "17%"
+    assert progress_percent([]) == "0%"
+
+
+def test_focus_step_indices_skips_done_and_keeps_order():
+    steps = _steps("done", "pending", "done", "pending", "pending")
+    assert focus_step_indices(steps) == [1, 3]
+    assert focus_step_indices(steps, limit=1) == [1]
+    assert focus_step_indices(_steps("done", "done")) == []
+
+
+def test_short_time():
+    assert short_time("6-8 weeks, ~5 hours per week") == "6-8 weeks"
+    assert short_time("4-6 weeks (overlapping with Step 1)") == "4-6 weeks"
+    assert short_time("Ongoing") == "Ongoing"
+    assert short_time("") == ""
+    assert short_time(None) == ""
+    long_text = short_time("Throughout the whole semester")
+    assert long_text.endswith("…") and len(long_text) <= 19
 
 
 # ---- theme ------------------------------------------------------------------

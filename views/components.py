@@ -5,6 +5,8 @@ components.kv; this file only declares the classes and their properties.
   Card          white box, 16dp corners, 1dp border (Kivy has no shadows,
                 so the border does that job)
   Icon          one Lucide icon:   Icon: name: "house"
+  IconButton    a clickable icon
+  TickBox       a checkbox in the Milestone 3 style
   Chip          small rounded label ("2-3 weeks", "Done")
   PrimaryButton / GhostButton / DangerButton
                 the three button styles; optional icon on the left
@@ -30,6 +32,7 @@ from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen
+from kivy.uix.widget import Widget
 
 from views import fonts  # noqa: F401  (registers fonts before the .kv uses them)
 from views.icons import icon
@@ -48,6 +51,16 @@ class Icon(Label):
 
     def on_name(self, _instance, value):
         self.text = icon(value) if value else ""
+
+
+class IconButton(ButtonBehavior, Icon):
+    """An icon you can click (the expand arrow on a roadmap step)."""
+
+
+class TickBox(ButtonBehavior, Widget):
+    """A checkbox drawn in the Milestone 3 style. Not named CheckBox because
+    Kivy already has a widget with that name."""
+    checked = BooleanProperty(False)
 
 
 class Chip(Label):

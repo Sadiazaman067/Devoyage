@@ -63,6 +63,19 @@ def generate_roadmap(user_id):
     return copy.deepcopy(roadmap)
 
 
+def set_step_status(step_id, status):
+    """Same contract as controllers.roadmap.set_step_status."""
+    from exceptions import ValidationError
+    if status not in ("pending", "done"):
+        raise ValidationError("Status must be either 'pending' or 'done'.")
+    for roadmap in _roadmaps_by_user.values():
+        for step in roadmap["steps"]:
+            if step["id"] == step_id:
+                step["status"] = status
+                return
+    raise ValidationError("Roadmap step wasn't found.")
+
+
 # ---------------------------------------------------------------------------
 # Fake data: a sophomore, 5-10 hrs/week, 16-18 credits, goal = internship.
 # Every reasoning names those intake specifics -- that's the product.

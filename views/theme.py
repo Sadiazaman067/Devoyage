@@ -39,6 +39,10 @@ PALETTES = {
         "chip_gray": "#F1EFF3",     # neutral chips (time estimates)
         "danger_border": "#E8C9CE", # outline of danger buttons and error boxes
         "checkbox": "#C9C3CF",      # unchecked checkbox outline
+        "mint_soft": "#EFF8EE",     # Weekly Focus panel fill
+        "mint_line": "#BFE3BC",     # Weekly Focus panel border
+        "blue_line": "#A9CBDD",     # border of the expanded roadmap step
+        "notnow_divider": "#EBD3D7",# lines between Not Now items
 
         # ---- Older names, kept so existing screens keep working ----------
         # The dashboard and forms were written against these. They now map

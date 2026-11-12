@@ -48,19 +48,24 @@ from kivy.uix.widget import Widget
 # the import blocks in views/controllers_api.py -- nothing here changes.
 from views.controllers_api import (
     AIServiceError,
+    AuthError,
     ValidationError,
     generate_roadmap,
     get_current_roadmap,
     log_out,
+    set_step_status,
 )
 
+from views import components  # noqa: F401  (Card, TickBox, Chip, Sidebar used in dashboard.kv)
 from views.dashboard_helpers import (
     DONE,
-    eyebrow_text,
-    headline,
+    focus_step_indices,
     next_step_index,
     progress_fraction,
-    progress_text,
+    progress_markup,
+    progress_percent,
+    short_time,
+    subtitle_text,
 )
 
 Builder.load_file(os.path.join(os.path.dirname(__file__), "dashboard.kv"))
@@ -113,27 +118,49 @@ class DashSkeletonBar(Widget):
 # Python only declares the properties the KV rules read.
 # ---------------------------------------------------------------------------
 
-class StepNumber(Widget):
-    """The numbered circle: filled with accent when done, outlined otherwise."""
+class FocusItem(BoxLayout):
+    """One step in the Weekly Focus panel."""
 
-    number = NumericProperty(0)
+    step_id = ObjectProperty(None)
+    title = StringProperty("")
     done = BooleanProperty(False)
-    up_next = BooleanProperty(False)
+    screen = ObjectProperty(None)
 
 
-class StepCard(BoxLayout):
-    """One roadmap step. Read-only: no checkbox until Phase 3."""
+class StepRow(BoxLayout):
+    """One roadmap step. The checkbox marks it done (set_step_status); the
+    arrow shows or hides "Why this, why now"."""
 
-    position = NumericProperty(0)
+    step_id = ObjectProperty(None)
     title = StringProperty("")
     description = StringProperty("")
     reasoning = StringProperty("")
-    est_time = StringProperty("")
+    time_label = StringProperty("")
     done = BooleanProperty(False)
-    up_next = BooleanProperty(False)  # first pending step gets an accent border + badge
+    expanded = BooleanProperty(False)
+    screen = ObjectProperty(None)
+
+    def on_kv_post(self, base_widget):
+        # ids are weak references: once the box is removed, Kivy would
+        # throw it away. `.__self__` keeps a real reference so it can come back.
+        self._why = self.ids.why.__self__
+        self._show_why()
+
+    def on_expanded(self, *args):
+        self._show_why()
+
+    def _show_why(self):
+        why = getattr(self, "_why", None)
+        if why is None:
+            return
+        wanted = self.expanded and not self.done and bool(self.reasoning)
+        if wanted and why.parent is None:
+            self.add_widget(why)
+        elif not wanted and why.parent is not None:
+            self.remove_widget(why)
 
 
-class NotNowCard(BoxLayout):
+class NotNowItem(BoxLayout):
     """One not-now item: a title and why to skip it for now."""
 
     title = StringProperty("")
@@ -169,41 +196,55 @@ class LoadingRing(Widget):
 
 class DashboardRoadmapView(ScrollView):
     stacked = BooleanProperty(False)
-    side_pad = NumericProperty(0)
-    eyebrow = StringProperty("")
-    headline_text = StringProperty("")
+    screen = ObjectProperty(None)
+    focus_subtitle = StringProperty("")
     progress = NumericProperty(0)
-    progress_label = StringProperty("")
+    progress_markup = StringProperty("")
+    percent_text = StringProperty("")
 
-    def show(self, roadmap):
+    def show(self, roadmap, expanded_ids):
         steps = roadmap.get("steps") or []
         not_now_items = roadmap.get("not_now_items") or []
 
-        self.eyebrow = eyebrow_text(roadmap.get("generated_at"))
-        self.headline_text = headline(steps)
         self.progress = progress_fraction(steps)
-        self.progress_label = progress_text(steps)
+        self.progress_markup = progress_markup(steps)
+        self.percent_text = progress_percent(steps)
 
-        up_next_index = next_step_index(steps)
+        # ---- Weekly Focus (TEMPORARY: see focus_step_indices) ----
+        focus_box = self.ids.focus_box
+        focus_box.clear_widgets()
+        focus = focus_step_indices(steps)
+        self.focus_subtitle = (
+            "Your next steps this week" if focus else "You've finished every step. Nice work."
+        )
+        for index in focus:
+            step = steps[index]
+            focus_box.add_widget(FocusItem(
+                step_id=step.get("id"),
+                title=step.get("title", ""),
+                done=False,
+                screen=self.screen,
+            ))
+
+        # ---- Roadmap steps, in the order the controller returned them ----
         steps_box = self.ids.steps_box
         steps_box.clear_widgets()
-        # enumerate() walks the list in the order the controller returned it,
-        # which is position order. No sorting here, on purpose.
-        for index, step in enumerate(steps):
-            steps_box.add_widget(StepCard(
-                position=step.get("position", index + 1),
+        for step in steps:
+            steps_box.add_widget(StepRow(
+                step_id=step.get("id"),
                 title=step.get("title", ""),
                 description=step.get("description", ""),
                 reasoning=step.get("reasoning", ""),
-                est_time=step.get("est_time") or "",
+                time_label=short_time(step.get("est_time")),
                 done=step.get("status") == DONE,
-                up_next=index == up_next_index,
+                expanded=step.get("id") in expanded_ids,
+                screen=self.screen,
             ))
 
         items_box = self.ids.notnow_items
         items_box.clear_widgets()
         for item in not_now_items:
-            items_box.add_widget(NotNowCard(
+            items_box.add_widget(NotNowItem(
                 title=item.get("title", ""),
                 reasoning=item.get("reasoning", ""),
             ))
@@ -240,8 +281,9 @@ class DashboardScreen(Screen):
     # screens rather than inventing a new mechanism.
     current_user_id = None
 
-    stacked = BooleanProperty(False)       # narrow window -> tighter top bar padding
-    has_settings = BooleanProperty(False)  # "Settings" is disabled until a settings screen exists
+    stacked = BooleanProperty(False)
+    has_settings = BooleanProperty(False)
+    subtitle = StringProperty("Your personalized roadmap for the semester")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -250,6 +292,10 @@ class DashboardScreen(Screen):
         # Bumped every time we start generating or log out. A background result
         # carrying an old number is stale and gets thrown away (see _on_generation_done).
         self._generation_id = 0
+        # Which steps have "Why this, why now" open. Kept here so checking a
+        # box (which redraws the list) doesn't close everything.
+        self._expanded_ids = set()
+        self._roadmap_id = None
 
     # ---- lifecycle --------------------------------------------------------
 
@@ -359,16 +405,54 @@ class DashboardScreen(Screen):
     # ---- what's on screen -------------------------------------------------
 
     def render_roadmap(self, roadmap):
-        view = DashboardRoadmapView()
-        view.show(roadmap)
+        steps = roadmap.get("steps") or []
+        if roadmap.get("id") != self._roadmap_id:
+            # A new roadmap: open the first unfinished step, like the mockup.
+            self._roadmap_id = roadmap.get("id")
+            up_next = next_step_index(steps)
+            self._expanded_ids = {steps[up_next].get("id")} if up_next is not None else set()
+        self.subtitle = subtitle_text(roadmap.get("generated_at"))
+
+        if isinstance(self._body_view, DashboardRoadmapView):
+            # Same view already on screen: refresh it in place so the
+            # scroll position doesn't jump back to the top.
+            self._body_view.show(roadmap, self._expanded_ids)
+            return
+        view = DashboardRoadmapView(screen=self)
+        view.show(roadmap, self._expanded_ids)
         self._set_body(view)
 
+    # ---- step actions (called from StepRow / FocusItem) -------------------
+
+    def toggle_step(self, step_id, done):
+        try:
+            set_step_status(step_id, DONE if done else "pending")
+        except (ValidationError, AuthError) as error:
+            Logger.warning(f"Dashboard: couldn't update step {step_id}: {error}")
+        # Re-read from the controller either way, so the screen always shows
+        # what's actually saved.
+        roadmap = get_current_roadmap(self.current_user_id)
+        if roadmap is not None:
+            self.render_roadmap(roadmap)
+
+    def toggle_expanded(self, step_id):
+        if step_id in self._expanded_ids:
+            self._expanded_ids.discard(step_id)
+        else:
+            self._expanded_ids.add(step_id)
+        if isinstance(self._body_view, DashboardRoadmapView):
+            for row in self._body_view.ids.steps_box.children:
+                if row.step_id == step_id:
+                    row.expanded = step_id in self._expanded_ids
+
     def show_loading(self):
+        self.subtitle = "Building your roadmap..."
         view = DashboardLoadingView()
         self._set_body(view)
         view.start()
 
     def show_error(self, message=""):
+        self.subtitle = "Your roadmap couldn't be built"
         self._set_body(DashboardErrorView(screen=self, detail=message))
 
     def _set_body(self, view):
@@ -405,4 +489,6 @@ class DashboardScreen(Screen):
         self._stop_body_animations()
         self.ids.body.clear_widgets()  # don't flash this roadmap at the next user
         self._body_view = None
+        self._roadmap_id = None
+        self._expanded_ids = set()
         self.manager.current = "landing"

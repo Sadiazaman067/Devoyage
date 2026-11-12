@@ -1,5 +1,6 @@
 #:import theme views.theme
 #:import helpers views.dashboard_helpers
+#:import icon views.icons.icon
 
 # Dashboard layout. Matches _notes/handoff/wireframes/dashboard.html and
 # dashboard_states.html. Behaviour lives in dashboard.py.
@@ -164,146 +165,210 @@
 
 
 # =========================================================================
-# Step and not-now cards (Python classes in dashboard.py)
+# Milestone 3 pieces (Python classes in dashboard.py)
 # =========================================================================
 
-<StepNumber>:
-    size_hint: None, None
-    size: dp(32), dp(32)
-    canvas:
-        Color:
-            rgba: theme.C.accent if self.done else theme.C.surface
-        Ellipse:
-            pos: self.pos
-            size: self.size
-        Color:
-            rgba: theme.C.clear if self.done else (theme.C.accent if self.up_next else theme.C.step_outline)
-        Line:
-            ellipse: (self.x + dp(1), self.y + dp(1), self.width - dp(2), self.height - dp(2))
-            width: dp(1.5)
-    Label:
-        pos: root.pos
-        size: root.size
-        text: str(root.number)
-        bold: True
-        font_size: "14sp"
-        color: theme.C.on_accent if root.done else (theme.C.accent if root.up_next else theme.C.text_muted)
-
-<StepCard>:
-    orientation: "vertical"
+# One step in the Weekly Focus panel: a checkbox and the step's title.
+<FocusItem>:
+    orientation: "horizontal"
     size_hint_y: None
-    height: self.minimum_height
-    padding: [dp(24), dp(22)]
+    height: max(dp(56), focus_title.height + dp(24))
+    padding: [dp(16), 0]
     spacing: dp(12)
-    opacity: 0.78 if self.done else 1          # done steps look muted
     canvas.before:
         Color:
-            rgba: theme.C.surface
+            rgba: theme.C.bg
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: [dp(16)]
+            radius: [dp(10)]
         Color:
-            rgba: theme.C.accent if self.up_next else theme.C.border
+            rgba: theme.C.mint_line
         Line:
-            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(16))
-            width: dp(1.5) if self.up_next else dp(1)
-
-    # Top row: number circle | title + pills + description | status
-    BoxLayout:
+            width: 1
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(10))
+    TickBox:
+        checked: root.done
+        pos_hint: {"center_y": 0.5}
+        on_release: root.screen.toggle_step(root.step_id, not root.done)
+    Label:
+        id: focus_title
+        text: root.title
+        font_name: "InterSemiBold"
+        font_size: "15sp"
+        color: theme.C.muted if root.done else theme.C.ink
+        strikethrough: root.done
+        text_size: self.width, None
         size_hint_y: None
-        height: self.minimum_height
-        spacing: dp(14)
+        height: self.texture_size[1]
+        pos_hint: {"center_y": 0.5}
 
-        StepNumber:
-            number: root.position
-            done: root.done
-            up_next: root.up_next
-            pos_hint: {"top": 1}
-
-        BoxLayout:
-            orientation: "vertical"
-            size_hint_y: None
-            height: self.minimum_height
-            spacing: dp(6)
-            pos_hint: {"top": 1}
-
-            BoxLayout:
-                size_hint_y: None
-                height: self.minimum_height
-                spacing: dp(10)
-                DashLabel:
-                    text: root.title
-                    color: theme.C.text
-                    font_size: "17sp"
-                    bold: True
-                    strikethrough: root.done
-                    pos_hint: {"top": 1}
-                DashPill:
-                    text: root.est_time
-                    pos_hint: {"top": 1}
-                DashPill:
-                    text: "Up next"
-                    fill: theme.C.accent_soft
-                    color: theme.C.accent_dark
-                    shown: root.up_next
-                    pos_hint: {"top": 1}
-
-            DashLabel:
-                text: root.description
-                color: theme.C.text_muted
-
-        # Read-only status (no checkbox: set_step_status is Phase 3).
-        DashPill:
-            text: "Done" if root.done else "To do"
-            fill: theme.C.accent_soft if root.done else theme.C.chip_bg
-            color: theme.C.accent_dark if root.done else theme.C.text_muted
-            pos_hint: {"top": 1}
-
-    # "Why this, why now" box
-    BoxLayout:
-        orientation: "vertical"
-        size_hint_y: None
-        height: self.minimum_height
-        padding: [dp(14), dp(12)]
-        spacing: dp(4)
-        canvas.before:
-            Color:
-                rgba: theme.C.why_bg
-            RoundedRectangle:
-                pos: self.pos
-                size: self.size
-                radius: [dp(12)]
-        DashLabel:
-            text: "WHY THIS, WHY NOW"
-            color: theme.C.accent_dark
-            font_size: "12sp"
-            bold: True
-        DashLabel:
-            text: root.reasoning
-            color: theme.C.why_text
-
-<NotNowCard>:
+# One roadmap step: checkbox, title, description, time chip, expand arrow.
+# The "Why this, why now" box is added and removed by StepRow.on_expanded.
+<StepRow>:
     orientation: "vertical"
     size_hint_y: None
     height: self.minimum_height
-    padding: [dp(16), dp(14)]
-    spacing: dp(4)
+    padding: [dp(18), dp(14)]
+    spacing: dp(12)
     canvas.before:
         Color:
-            rgba: theme.C.notnow_card
+            rgba: theme.C.bg
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: [dp(12)]
-    DashLabel:
+        Color:
+            rgba: theme.C.blue_line if (root.expanded and not root.done) else theme.C.line
+        Line:
+            width: 1.2 if (root.expanded and not root.done) else 1
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(12))
+
+    BoxLayout:
+        size_hint_y: None
+        height: max(dp(40), text_col.height)
+        spacing: dp(14)
+        TickBox:
+            checked: root.done
+            pos_hint: {"center_y": 0.5}
+            on_release: root.screen.toggle_step(root.step_id, not root.done)
+        BoxLayout:
+            id: text_col
+            orientation: "vertical"
+            size_hint_y: None
+            height: self.minimum_height
+            pos_hint: {"center_y": 0.5}
+            spacing: dp(2)
+            Label:
+                text: root.title
+                font_name: "InterSemiBold"
+                font_size: "16sp"
+                color: theme.C.muted if root.done else theme.C.ink
+                strikethrough: root.done
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+            Label:
+                text: root.description
+                font_size: "14sp"
+                color: theme.C.muted
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+        Chip:
+            markup: True
+            text: ("[font=Icons]" + icon("check") + "[/font]  Done") if root.done else (("[font=Icons]" + icon("clock") + "[/font]  " + root.time_label) if root.time_label else "")
+            fill: theme.C.mint if root.done else theme.C.chip_gray
+            color: theme.C.mint_ink if root.done else theme.C.muted
+            opacity: 1 if (root.done or root.time_label) else 0
+            pos_hint: {"center_y": 0.5}
+        IconButton:
+            name: "chevron-down"
+            size: dp(28), dp(28)
+            color: theme.C.blue if root.expanded else theme.C.muted
+            opacity: 0 if root.done else 1
+            disabled: root.done
+            pos_hint: {"center_y": 0.5}
+            on_release: root.screen.toggle_expanded(root.step_id)
+
+    BoxLayout:
+        id: why
+        orientation: "vertical"
+        size_hint_y: None
+        height: self.minimum_height
+        padding: [dp(18), dp(14)]
+        spacing: dp(6)
+        canvas.before:
+            Color:
+                rgba: theme.C.blue_tint
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(10)]
+        Label:
+            markup: True
+            text: "[font=Icons]" + icon("lightbulb") + "[/font]  WHY THIS, WHY NOW"
+            font_name: "InterSemiBold"
+            font_size: "12sp"
+            color: theme.C.blue
+            text_size: self.width, None
+            size_hint_y: None
+            height: self.texture_size[1]
+        Label:
+            text: root.reasoning
+            font_size: "14sp"
+            color: theme.C.ink
+            line_height: 1.25
+            text_size: self.width, None
+            size_hint_y: None
+            height: self.texture_size[1]
+
+# One Not Now item: title, reason, and a line above it.
+<NotNowItem>:
+    orientation: "vertical"
+    size_hint_y: None
+    height: self.minimum_height
+    padding: [0, dp(14), 0, 0]
+    spacing: dp(4)
+    canvas.before:
+        Color:
+            rgba: theme.C.notnow_divider
+        Rectangle:
+            pos: self.x, self.top - dp(1)
+            size: self.width, dp(1)
+    Label:
         text: root.title
-        color: theme.C.notnow_heading
+        font_name: "InterSemiBold"
         font_size: "16sp"
-        bold: True
-    DashLabel:
+        color: theme.C.ink
+        text_size: self.width, None
+        size_hint_y: None
+        height: self.texture_size[1]
+    Label:
         text: root.reasoning
-        color: theme.C.notnow_text
+        font_size: "14sp"
+        color: theme.C.muted
+        line_height: 1.2
+        text_size: self.width, None
+        size_hint_y: None
+        height: self.texture_size[1]
+
+# Card heading: icon + title + subtitle.
+<PanelHeading@BoxLayout>:
+    icon_name: "map"
+    title: ""
+    subtitle: ""
+    title_color: theme.C.ink
+    icon_color: theme.C.blue
+    size_hint_y: None
+    height: dp(48) if self.subtitle else dp(28)
+    spacing: dp(12)
+    Icon:
+        name: root.icon_name
+        color: root.icon_color
+        font_size: "22sp"
+        size: dp(26), dp(26)
+        pos_hint: {"top": 1}
+    BoxLayout:
+        orientation: "vertical"
+        Label:
+            text: root.title
+            bold: True
+            font_size: "20sp"
+            color: root.title_color
+            text_size: self.size
+            halign: "left"
+            valign: "middle"
+            size_hint_y: None
+            height: dp(26)
+        Label:
+            text: root.subtitle
+            font_size: "14sp"
+            color: theme.C.muted
+            text_size: self.size
+            halign: "left"
+            valign: "top"
+
 
 <LoadingRing>:
     size_hint: None, None
@@ -328,117 +393,132 @@
 
 <DashboardRoadmapView>:
     stacked: helpers.use_stacked_layout(self.width / dp(1))
-    # Centre the content at max 1120dp wide; otherwise 32dp (16dp when narrow) margins.
-    side_pad: max(dp(16) if self.stacked else dp(32), (self.width - dp(1120)) / 2)
     do_scroll_x: False
     bar_width: dp(6)
-    bar_color: theme.C.step_outline
-    bar_inactive_color: theme.C.border
+    bar_color: theme.C.checkbox
+    bar_inactive_color: theme.C.line
     scroll_type: ["bars", "content"]
 
-    # A ScrollView holds exactly one child. Its height is set to its content
-    # (minimum_height); when that's taller than the window, you can scroll.
+    # A ScrollView holds exactly one child, as tall as its content.
     BoxLayout:
         orientation: "vertical"
         size_hint_y: None
         height: self.minimum_height
-        padding: [root.side_pad, dp(40), root.side_pad, dp(64)]
-        spacing: dp(12)
+        padding: [0, 0, dp(10), dp(24)]
+        spacing: dp(22)
 
-        # ---- Header ----
-        DashLabel:
-            text: root.eyebrow
-            color: theme.C.eyebrow
-            font_size: "12sp"
-            bold: True
-        DashLabel:
-            text: root.headline_text
-            color: theme.C.text
-            font_size: "30sp"
-            bold: True
-        BoxLayout:
-            size_hint_y: None
-            height: dp(24)
-            spacing: dp(14)
-            DashProgressBar:
-                value: root.progress
-                size_hint: None, None
-                width: max(dp(80), min(dp(420), root.width - 2 * root.side_pad - dp(120)))
-                height: dp(8)
-                pos_hint: {"center_y": 0.5}
-            Label:
-                text: root.progress_label
-                color: theme.C.text_label
-                font_size: "14sp"
-                bold: True
-                size_hint: None, None
-                size: self.texture_size
-                pos_hint: {"center_y": 0.5}
-
-        Widget:
-            size_hint_y: None
-            height: dp(16)
-
-        # ---- Two columns; stacked when the window is narrow ----
+        # ---- Row 1: Weekly Focus + Progress ----
         BoxLayout:
             orientation: "vertical" if root.stacked else "horizontal"
             size_hint_y: None
-            height: self.minimum_height
-            spacing: dp(28)
+            height: self.minimum_height if root.stacked else max(focus_card.minimum_height, progress_card.minimum_height)
+            spacing: dp(22)
 
-            # Left: steps
-            BoxLayout:
+            Card:
+                id: focus_card
                 orientation: "vertical"
-                size_hint_y: None
+                bg_color: theme.C.mint_soft
+                border_color: theme.C.mint_line
+                size_hint_y: None if root.stacked else 1
                 height: self.minimum_height
+                padding: [dp(22), dp(20)]
                 spacing: dp(16)
-                pos_hint: {"top": 1}
-                DashLabel:
-                    text: "Your steps, in order"
-                    color: theme.C.text
-                    font_size: "20sp"
-                    bold: True
+                PanelHeading:
+                    icon_name: "target"
+                    icon_color: theme.C.mint_ink
+                    title: "Weekly Focus"
+                    subtitle: root.focus_subtitle
+                BoxLayout:
+                    id: focus_box
+                    orientation: "vertical" if root.stacked else "horizontal"
+                    size_hint_y: None
+                    height: self.minimum_height if root.stacked else max([c.height for c in self.children] or [dp(56)])
+                    spacing: dp(14)
+
+            Card:
+                id: progress_card
+                orientation: "vertical"
+                size_hint_x: None
+                width: self.parent.width if root.stacked else dp(360)
+                size_hint_y: None if root.stacked else 1
+                height: self.minimum_height
+                padding: [dp(22), dp(20)]
+                spacing: dp(12)
+                PanelHeading:
+                    icon_name: "chart-column"
+                    title: "Progress"
+                Label:
+                    markup: True
+                    text: root.progress_markup
+                    font_size: "17sp"
+                    color: theme.C.ink
+                    text_size: self.width, None
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                DashProgressBar:
+                    value: root.progress
+                    size_hint_y: None
+                    height: dp(10)
+                Label:
+                    text: root.percent_text
+                    font_size: "13sp"
+                    color: theme.C.muted
+                    text_size: self.width, None
+                    halign: "right"
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+        # ---- Row 2: Roadmap + Not Now ----
+        BoxLayout:
+            orientation: "vertical" if root.stacked else "horizontal"
+            size_hint_y: None
+            height: self.minimum_height if root.stacked else max(roadmap_card.minimum_height, notnow_card.minimum_height)
+            spacing: dp(22)
+
+            Card:
+                id: roadmap_card
+                orientation: "vertical"
+                size_hint_y: None if root.stacked else 1
+                height: self.minimum_height
+                padding: [dp(22), dp(20)]
+                spacing: dp(16)
+                PanelHeading:
+                    icon_name: "map"
+                    title: "Your Semester Roadmap"
+                    subtitle: "Steps in order. Open a step to see why it's next for you."
                 BoxLayout:
                     id: steps_box
                     orientation: "vertical"
                     size_hint_y: None
                     height: self.minimum_height
-                    spacing: dp(16)
+                    spacing: dp(12)
+                Widget:
+                    # fills leftover height when Not Now is the taller card
 
-            # Right: not now (340dp wide; full width when stacked).
-            # size_hint_x stays None and the width itself depends on
-            # root.stacked: a constant `width: dp(340)` is applied only once,
-            # so after flipping from stacked to side-by-side it would keep
-            # the stale stacked width.
-            DashNotNowFrame:
+            Card:
+                id: notnow_card
+                orientation: "vertical"
+                bg_color: theme.C.crimson_tint
+                border_color: theme.C.danger_border
                 size_hint_x: None
-                width: self.parent.width if root.stacked else dp(340)
-                pos_hint: {"top": 1}
-                BoxLayout:
-                    orientation: "vertical"
-                    size_hint_y: None
-                    height: self.minimum_height
-                    spacing: dp(4)
-                    DashLabel:
-                        text: "SKIP FOR NOW"
-                        color: theme.C.notnow_eyebrow
-                        font_size: "12sp"
-                        bold: True
-                    DashLabel:
-                        text: "Not now, and why"
-                        color: theme.C.notnow_heading
-                        font_size: "20sp"
-                        bold: True
-                    DashLabel:
-                        text: "Things you'll hear you \"should\" do. For you, right now, they'd cost more than they give."
-                        color: theme.C.notnow_subtitle
-                        font_size: "13sp"
+                width: self.parent.width if root.stacked else dp(360)
+                size_hint_y: None if root.stacked else 1
+                height: self.minimum_height
+                padding: [dp(22), dp(20)]
+                spacing: dp(12)
+                PanelHeading:
+                    icon_name: "eye-off"
+                    icon_color: theme.C.crimson
+                    title_color: theme.C.crimson
+                    title: "Not Now"
+                    subtitle: "Things to skip for now, and why."
                 BoxLayout:
                     id: notnow_items
                     orientation: "vertical"
                     size_hint_y: None
                     height: self.minimum_height
-                    spacing: dp(12)
+                    spacing: dp(14)
+                Widget:
 
 
 # =========================================================================
@@ -447,9 +527,9 @@
 
 <DashboardLoadingView>:
     stacked: helpers.use_stacked_layout(self.width / dp(1))
-    side_pad: max(dp(16) if self.stacked else dp(32), (self.width - dp(1120)) / 2)
+    side_pad: 0
     orientation: "vertical"
-    padding: [root.side_pad, dp(40), root.side_pad, dp(24)]
+    padding: [0, 0, 0, dp(24)]
     spacing: dp(18)
 
     DashCardFrame:
@@ -519,9 +599,9 @@
 
 <DashboardErrorView>:
     stacked: helpers.use_stacked_layout(self.width / dp(1))
-    side_pad: max(dp(16) if self.stacked else dp(32), (self.width - dp(1120)) / 2)
+    side_pad: 0
     orientation: "vertical"
-    padding: [root.side_pad, dp(40), root.side_pad, dp(24)]
+    padding: [0, 0, 0, dp(24)]
 
     DashCardFrame:
         frame_line: theme.C.error_border
@@ -586,6 +666,44 @@
         Sidebar:
             active: "dashboard"
 
-        # ---- Body: dashboard.py puts exactly one state view in here ----
         BoxLayout:
-            id: body
+            orientation: "vertical"
+            padding: [dp(36), dp(28), dp(28), 0]
+            spacing: dp(22)
+
+            # ---- Page header ----
+            BoxLayout:
+                size_hint_y: None
+                height: dp(64)
+                BoxLayout:
+                    orientation: "vertical"
+                    Label:
+                        text: "Dashboard"
+                        bold: True
+                        font_size: "30sp"
+                        color: theme.C.ink
+                        halign: "left"
+                        valign: "bottom"
+                        text_size: self.size
+                    Label:
+                        text: root.subtitle
+                        font_size: "15sp"
+                        color: theme.C.muted
+                        halign: "left"
+                        valign: "top"
+                        text_size: self.size
+                Icon:
+                    name: "user"
+                    color: theme.C.blue
+                    size: dp(44), dp(44)
+                    pos_hint: {"top": 1}
+                    canvas.before:
+                        Color:
+                            rgba: theme.C.blue_tint
+                        Ellipse:
+                            pos: self.pos
+                            size: self.size
+
+            # ---- Body: dashboard.py puts exactly one state view in here ----
+            BoxLayout:
+                id: body

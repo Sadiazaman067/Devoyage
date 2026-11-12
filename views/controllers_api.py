@@ -19,12 +19,12 @@ from exceptions import AuthError, ValidationError, AIServiceError
 
 # ---- A: dev stubs (off) -----------------------------------------------------
 # from dev_stubs.controllers_stub import sign_up, log_in, log_out, save_intake, has_completed_intake
-# from dev_stubs.roadmap_stub import get_current_roadmap, generate_roadmap
+# from dev_stubs.roadmap_stub import get_current_roadmap, generate_roadmap, set_step_status
 
 # ---- B: real controllers (ACTIVE) -------------------------------------------
 from controllers.auth import sign_up, log_in, log_out
 from controllers.intake import save_intake, has_completed_intake
-from controllers.roadmap import get_current_roadmap, generate_roadmap
+from controllers.roadmap import get_current_roadmap, generate_roadmap, set_step_status
 
 __all__ = [
     "sign_up",
@@ -35,6 +35,7 @@ __all__ = [
     "AuthError",
     "get_current_roadmap",
     "generate_roadmap",
+    "set_step_status",
     "AIServiceError",
     "ValidationError",
 ]
