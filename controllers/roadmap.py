@@ -84,3 +84,58 @@ def set_step_status(step_id, status: str):
 
     finally:
         conn.close()
+
+def get_weekly_focus(user_id: int):
+
+    conn = db.get_connection()
+
+    try:
+        latest_intake = intakes.get_latest_intake(
+            conn,
+            user_id,
+        )
+
+        if latest_intake is None:
+            raise ValidationError(
+                "Complete the intake first."
+            )
+
+        current_roadmap = roadmaps.get_current_roadmap(
+            conn,
+            user_id,
+        )
+
+    finally:
+        conn.close()
+
+    # user has an intake but has not generated a roadmap yet
+    if current_roadmap is None:
+        return []
+
+    pending_steps = []
+
+    for step in current_roadmap["steps"]:
+
+        if step["status"] == "pending":
+            pending_steps.append(step)
+
+    weekly_hours = latest_intake["weekly_hours"]
+
+    if weekly_hours == "under_5":
+        number_of_steps = 1
+
+    elif weekly_hours == "5_10":
+        number_of_steps = 2
+
+    elif weekly_hours == "10_15":
+        number_of_steps = 3
+
+    elif weekly_hours == "15_plus":
+        number_of_steps = 3
+
+    else:
+        raise ValidationError(
+            "Invalid weekly hours."
+        )
+
+    return pending_steps[:number_of_steps]
