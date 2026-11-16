@@ -125,6 +125,11 @@ class ErrorBox(BoxLayout):
     message = StringProperty("")
 
 
+class SuccessBox(BoxLayout):
+    """Mint message box ("Email updated."). Collapses when message is ''."""
+    message = StringProperty("")
+
+
 class LinkLabel(Label):
     """'Don't have an account? Sign up' -- the blue part is a link.
     Set `prompt` and `link_text`, and handle on_follow."""
@@ -173,8 +178,10 @@ class Sidebar(BoxLayout):
         # The dashboard already knows how to log out cleanly (clears the
         # session, stops a running generation, forgets the user on the
         # intake screen), so every page's Log out goes through it.
-        manager = App.get_running_app().root
-        manager.get_screen("dashboard").log_out_user()
+        app = App.get_running_app()
+        app.root.get_screen("dashboard").log_out_user()
+        # The theme is per user: the next person starts in light mode.
+        app.apply_theme("light")
 
 
 class AppPage(Screen):

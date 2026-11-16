@@ -17,7 +17,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from views.dashboard_helpers import (  # noqa: E402
     count_done,
-    focus_step_indices,
     progress_markup,
     progress_percent,
     short_time,
@@ -136,13 +135,6 @@ def test_progress_markup_and_percent():
     assert progress_percent([]) == "0%"
 
 
-def test_focus_step_indices_skips_done_and_keeps_order():
-    steps = _steps("done", "pending", "done", "pending", "pending")
-    assert focus_step_indices(steps) == [1, 3]
-    assert focus_step_indices(steps, limit=1) == [1]
-    assert focus_step_indices(_steps("done", "done")) == []
-
-
 def test_short_time():
     assert short_time("6-8 weeks, ~5 hours per week") == "6-8 weeks"
     assert short_time("4-6 weeks (overlapping with Step 1)") == "4-6 weeks"
@@ -174,6 +166,14 @@ def test_hex_to_rgba_rejects_bad_input():
 def test_every_palette_color_parses():
     for name in PALETTES["light"]:
         assert len(rgba(name)) == 4
+    for palette in PALETTES.values():
+        for value in palette.values():
+            assert len(hex_to_rgba(value)) == 4
+
+
+def test_dark_palette_has_every_light_color():
+    # A missing name would crash the dark theme the moment a screen used it.
+    assert set(PALETTES["dark"]) == set(PALETTES["light"])
 
 
 if __name__ == "__main__":

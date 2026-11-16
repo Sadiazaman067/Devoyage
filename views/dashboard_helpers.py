@@ -101,22 +101,6 @@ def progress_percent(steps):
     return f"{round(progress_fraction(steps) * 100)}%"
 
 
-def focus_step_indices(steps, limit=2):
-    """TEMPORARY Weekly Focus: the first `limit` unfinished steps, in order.
-
-    The real rule (1-3 steps depending on weekly hours) belongs to the
-    controller, get_weekly_focus(user_id), which Arnav is writing. When it
-    lands, the dashboard calls that instead and this function goes away.
-    """
-    picked = []
-    for index, step in enumerate(steps):
-        if step.get("status") != DONE:
-            picked.append(index)
-            if len(picked) == limit:
-                break
-    return picked
-
-
 def short_time(est_time, max_len=18):
     """Shorten the AI's time estimate so it fits in a chip.
 

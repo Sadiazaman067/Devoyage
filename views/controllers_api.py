@@ -20,11 +20,33 @@ from exceptions import AuthError, ValidationError, AIServiceError
 # ---- A: dev stubs (off) -----------------------------------------------------
 # from dev_stubs.controllers_stub import sign_up, log_in, log_out, save_intake, has_completed_intake
 # from dev_stubs.roadmap_stub import get_current_roadmap, generate_roadmap, set_step_status
+# from dev_stubs.settings_stub import (
+#     get_settings, update_theme, update_weekly_hours, change_email,
+#     change_password, regenerate_roadmap, clear_roadmap_data, make_weekly_focus,
+# )
+# get_weekly_focus = make_weekly_focus(get_current_roadmap)
 
 # ---- B: real controllers (ACTIVE) -------------------------------------------
 from controllers.auth import sign_up, log_in, log_out
 from controllers.intake import save_intake, has_completed_intake
 from controllers.roadmap import get_current_roadmap, generate_roadmap, set_step_status
+
+# Settings + Weekly Focus. TEMPORARY try/except: Arnav's controllers/settings.py
+# and get_weekly_focus are on feat/settings-weekly-focus, not on main yet.
+# Until they're merged, the stand-ins in dev_stubs/settings_stub.py fill in.
+# After the merge, delete the `except` part and keep the two real imports.
+try:
+    from controllers.settings import (
+        get_settings, update_theme, update_weekly_hours, change_email,
+        change_password, regenerate_roadmap, clear_roadmap_data,
+    )
+    from controllers.roadmap import get_weekly_focus
+except ImportError:
+    from dev_stubs.settings_stub import (
+        get_settings, update_theme, update_weekly_hours, change_email,
+        change_password, regenerate_roadmap, clear_roadmap_data, make_weekly_focus,
+    )
+    get_weekly_focus = make_weekly_focus(get_current_roadmap)
 
 __all__ = [
     "sign_up",
@@ -36,6 +58,14 @@ __all__ = [
     "get_current_roadmap",
     "generate_roadmap",
     "set_step_status",
+    "get_weekly_focus",
+    "get_settings",
+    "update_theme",
+    "update_weekly_hours",
+    "change_email",
+    "change_password",
+    "regenerate_roadmap",
+    "clear_roadmap_data",
     "AIServiceError",
     "ValidationError",
 ]

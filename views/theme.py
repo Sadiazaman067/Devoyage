@@ -88,10 +88,84 @@ PALETTES = {
         "form_hint": "#808080",
         "clear": "#00000000",
     },
-    # "dark": {...}  -- Settings theme switch. Same keys, different values.
+    "dark": {
+        # Same names as "light". Text colors pass 4.5:1 on the dark
+        # backgrounds they sit on (see tests/test_dashboard_helpers.py).
+        "ink": "#EDE7F2",
+        "blue": "#7BBDE3",
+        "mint": "#24452E",
+        "mint_ink": "#BFE8BC",
+        "crimson": "#F2959E",
+        "bg": "#17121C",
+        "sidebar": "#1F1925",
+        "line": "#352D3D",
+        "muted": "#B3AABC",
+        "blue_tint": "#1D3644",
+        "crimson_tint": "#3A1F26",
+        "chip_gray": "#2B2432",
+        "danger_border": "#6E3039",
+        "checkbox": "#5D5466",
+        "mint_soft": "#1A2B20",
+        "mint_line": "#2F5A39",
+        "blue_line": "#2F6E91",
+        "notnow_divider": "#4C2C33",
+
+        "background": "#17121C",
+        "top_bar": "#1F1925",
+        "surface": "#17121C",
+        "border": "#352D3D",
+        "text": "#EDE7F2",
+        "text_body": "#EDE7F2",
+        "text_muted": "#B3AABC",
+        "text_faint": "#9A91A3",
+        "accent": "#7BBDE3",
+        "accent_soft": "#1D3644",
+        "accent_dark": "#5FA3CC",
+        "why_bg": "#1F1925",
+        "notnow_bg": "#3A1F26",
+        "notnow_border": "#6E3039",
+        "notnow_card": "#17121C",
+        "notnow_text": "#B3AABC",
+        "error_border": "#6E3039",
+        "on_accent": "#17121C",
+        "eyebrow": "#7BBDE3",
+        "chip_bg": "#2B2432",
+        "why_text": "#EDE7F2",
+        "step_outline": "#5D5466",
+        "text_label": "#EDE7F2",
+        "notnow_eyebrow": "#F2959E",
+        "notnow_heading": "#EDE7F2",
+        "notnow_subtitle": "#B3AABC",
+        "skeleton_bar": "#2B2432",
+        "skeleton_why": "#221C28",
+        "skeleton_notnow_bar": "#4C2C33",
+        "spinner_track": "#1D3644",
+
+        "form_error": "#F2959E",
+        "form_subtitle": "#B3AABC",
+        "form_hint": "#9A91A3",
+        "clear": "#00000000",
+    },
 }
 
 COLORS = PALETTES["light"]
+current_theme = "light"
+
+
+def set_palette(name):
+    """Switch every color to PALETTES[name]. Returns True if it changed.
+
+    Widgets read their colors when they're created, so after this the app
+    rebuilds its screens (DevoyageApp.apply_theme in main.py).
+    """
+    global COLORS, current_theme
+    if name not in PALETTES:
+        name = "light"
+    if name == current_theme:
+        return False
+    COLORS = PALETTES[name]
+    current_theme = name
+    return True
 
 
 def hex_to_rgba(hex_color, alpha=None):

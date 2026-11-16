@@ -13,7 +13,9 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
 import os
 
-from views.controllers_api import log_in, has_completed_intake, AuthError, ValidationError  # swap point: see views/controllers_api.py
+from kivy.app import App
+
+from views.controllers_api import log_in, has_completed_intake, get_settings, AuthError, ValidationError  # swap point: see views/controllers_api.py
 
 Builder.load_file(os.path.join(os.path.dirname(__file__), "login.kv"))
 
@@ -35,12 +37,26 @@ class LoginScreen(Screen):
 
         # Ask the controller, never the database, whether this user has
         # finished intake. No intake yet -> intake screen; otherwise dashboard.
-        if has_completed_intake(user_id):
-            self.manager.get_screen("dashboard").current_user_id = user_id
-            self.manager.current = "dashboard"
+        target = "dashboard" if has_completed_intake(user_id) else "intake"
+
+        # Switch to the user's saved theme (Settings) BEFORE moving on: the
+        # switch rebuilds every screen, so it has to happen while we're
+        # still on this one. After it, self.manager is the old set of
+        # screens, so use the app's current root from here on.
+        App.get_running_app().apply_theme(self._saved_theme(user_id))
+        manager = App.get_running_app().root
+
+        if target == "dashboard":
+            manager.get_screen("dashboard").current_user_id = user_id
         else:
-            self.manager.get_screen("intake").set_current_user(user_id)
-            self.manager.current = "intake"
+            manager.get_screen("intake").set_current_user(user_id)
+        manager.current = target
+
+    def _saved_theme(self, user_id):
+        try:
+            return get_settings(user_id).get("theme") or "light"
+        except (ValidationError, AuthError):
+            return "light"  # no intake yet, so no settings yet
 
     def _show_error(self, message):
         self.ids.error_box.message = message

@@ -8,6 +8,10 @@
 
 # ---- Card -----------------------------------------------------------------
 <Card>:
+    # Set here, not as Python defaults, so a theme switch (which rebuilds the
+    # screens) picks up the new colors.
+    bg_color: theme.C.bg
+    border_color: theme.C.line
     canvas.before:
         Color:
             rgba: self.bg_color
@@ -128,6 +132,7 @@
 
 # ---- Chip -----------------------------------------------------------------
 <Chip>:
+    fill: theme.C.blue_tint
     font_name: "InterSemiBold"
     font_size: "13sp"
     color: theme.C.blue
@@ -288,6 +293,33 @@
         halign: "left"
         valign: "middle"
 
+<SuccessBox>:
+    size_hint_y: None
+    height: dp(46) if self.message else 0
+    opacity: 1 if self.message else 0
+    padding: [dp(14), 0]
+    spacing: dp(10)
+    canvas.before:
+        Color:
+            rgba: theme.C.mint_soft
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
+    Icon:
+        name: "check"
+        color: theme.C.mint_ink
+        font_size: "17sp"
+        size: dp(20), dp(20)
+        pos_hint: {"center_y": 0.5}
+    Label:
+        text: root.message
+        font_size: "14sp"
+        color: theme.C.mint_ink
+        text_size: self.size
+        halign: "left"
+        valign: "middle"
+
 <LinkLabel>:
     markup: True
     text: root.prompt + "  [ref=go][color=166088][b]" + root.link_text + "[/b][/color][/ref]"
@@ -371,7 +403,7 @@
     spacing: dp(12)
     canvas.before:
         Color:
-            rgba: theme.C.blue_tint if self.active else ((0.93, 0.93, 0.95, 1) if self.state == "down" else (0, 0, 0, 0))
+            rgba: theme.C.blue_tint if self.active else (theme.C.line if self.state == "down" else (0, 0, 0, 0))
         RoundedRectangle:
             pos: self.pos
             size: self.size

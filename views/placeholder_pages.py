@@ -1,6 +1,6 @@
 """
 Signed-in pages that exist in the sidebar but aren't built yet: Career
-Paths, Resources Hub, Portfolio Log, Settings.
+Paths, Resources Hub, Portfolio Log.
 
 Each one is an AppPage (sidebar + header) with a "coming soon" card, so the
 navigation works end to end today. When a page is built, give it its own
@@ -72,11 +72,3 @@ class PortfolioScreen(_PlaceholderPage):
     subtitle = "Keep track of what you've actually done."
     icon_name = "list"
     blurb = "Log your projects, courses, certificates, and hackathons, and link them to the roadmap steps they complete."
-
-
-class SettingsScreen(_PlaceholderPage):
-    nav_name = "settings"
-    title = "Settings"
-    subtitle = "Theme, weekly hours, and your account."
-    icon_name = "settings"
-    blurb = "Switch between light and dark mode, change your weekly hours, update your email or password, and regenerate or clear your roadmap."

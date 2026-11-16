@@ -52,6 +52,7 @@ from views.controllers_api import (
     ValidationError,
     generate_roadmap,
     get_current_roadmap,
+    get_weekly_focus,
     log_out,
     set_step_status,
 )
@@ -59,7 +60,6 @@ from views.controllers_api import (
 from views import components  # noqa: F401  (Card, TickBox, Chip, Sidebar used in dashboard.kv)
 from views.dashboard_helpers import (
     DONE,
-    focus_step_indices,
     next_step_index,
     progress_fraction,
     progress_markup,
@@ -210,15 +210,17 @@ class DashboardRoadmapView(ScrollView):
         self.progress_markup = progress_markup(steps)
         self.percent_text = progress_percent(steps)
 
-        # ---- Weekly Focus (TEMPORARY: see focus_step_indices) ----
+        # ---- Weekly Focus: the controller picks 1-3 steps from weekly hours ----
         focus_box = self.ids.focus_box
         focus_box.clear_widgets()
-        focus = focus_step_indices(steps)
+        try:
+            focus = get_weekly_focus(self.screen.current_user_id)
+        except ValidationError:
+            focus = []
         self.focus_subtitle = (
             "Your next steps this week" if focus else "You've finished every step. Nice work."
         )
-        for index in focus:
-            step = steps[index]
+        for step in focus:
             focus_box.add_widget(FocusItem(
                 step_id=step.get("id"),
                 title=step.get("title", ""),
@@ -434,6 +436,15 @@ class DashboardScreen(Screen):
         roadmap = get_current_roadmap(self.current_user_id)
         if roadmap is not None:
             self.render_roadmap(roadmap)
+
+    def forget_roadmap(self):
+        """Called after Clear roadmap data: drop what's on screen, so the next
+        visit to the dashboard reads (and builds) a fresh roadmap."""
+        self._stop_body_animations()
+        self.ids.body.clear_widgets()
+        self._body_view = None
+        self._roadmap_id = None
+        self._expanded_ids = set()
 
     def toggle_expanded(self, step_id):
         if step_id in self._expanded_ids:
