@@ -31,6 +31,7 @@ from views.controllers_api import (
     change_email,
     change_password,
     clear_roadmap_data,
+    get_current_user_id,
     get_settings,
     update_theme,
     update_weekly_hours,
@@ -73,7 +74,7 @@ class SettingsScreen(AppPage):
 
     @property
     def user_id(self):
-        return self.manager.get_screen("dashboard").current_user_id
+        return get_current_user_id()
 
     def _left(self, success="", error=""):
         self.body.left_success, self.body.left_error = success, error
@@ -103,7 +104,7 @@ class SettingsScreen(AppPage):
             self._left(error=str(error))
             return
         # Rebuilds every screen in the new colors and comes back here.
-        App.get_running_app().apply_theme(theme_name, user_id=self.user_id, screen="settings")
+        App.get_running_app().apply_theme(theme_name, screen="settings")
 
     def set_hours(self, weekly_hours):
         if weekly_hours == self.body.weekly_hours:

@@ -44,13 +44,7 @@ class LoginScreen(Screen):
         # still on this one. After it, self.manager is the old set of
         # screens, so use the app's current root from here on.
         App.get_running_app().apply_theme(self._saved_theme(user_id))
-        manager = App.get_running_app().root
-
-        if target == "dashboard":
-            manager.get_screen("dashboard").current_user_id = user_id
-        else:
-            manager.get_screen("intake").set_current_user(user_id)
-        manager.current = target
+        App.get_running_app().root.current = target
 
     def _saved_theme(self, user_id):
         try:

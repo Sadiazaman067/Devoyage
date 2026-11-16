@@ -40,7 +40,7 @@ class SignUpScreen(Screen):
             return
 
         try:
-            user_id = sign_up(email, password)
+            sign_up(email, password)
         except (AuthError, ValidationError) as e:
             self._show_error(str(e))
             return
@@ -48,7 +48,8 @@ class SignUpScreen(Screen):
         self._clear_form()
 
         # F1 user flow: "Visitor lands on homepage, signs up, is taken to intake."
-        self.manager.get_screen("intake").set_current_user(user_id)
+        # sign_up also logs the new user in (controller session), so the
+        # intake screen knows who this is without being told.
         self.manager.current = "intake"
 
     def _show_error(self, message, field=None):

@@ -18,7 +18,7 @@ Which block is active (switched 11/11, after #10, #14 and #15 merged):
 from exceptions import AuthError, ValidationError, AIServiceError
 
 # ---- A: dev stubs (off) -----------------------------------------------------
-# from dev_stubs.controllers_stub import sign_up, log_in, log_out, save_intake, has_completed_intake
+# from dev_stubs.controllers_stub import sign_up, log_in, log_out, get_current_user_id, save_intake, has_completed_intake
 # from dev_stubs.roadmap_stub import get_current_roadmap, generate_roadmap, set_step_status
 # from dev_stubs.settings_stub import (
 #     get_settings, update_theme, update_weekly_hours, change_email,
@@ -27,7 +27,7 @@ from exceptions import AuthError, ValidationError, AIServiceError
 # get_weekly_focus = make_weekly_focus(get_current_roadmap)
 
 # ---- B: real controllers (ACTIVE) -------------------------------------------
-from controllers.auth import sign_up, log_in, log_out
+from controllers.auth import sign_up, log_in, log_out, get_current_user_id
 from controllers.intake import save_intake, has_completed_intake
 from controllers.roadmap import get_current_roadmap, generate_roadmap, set_step_status
 
@@ -52,6 +52,7 @@ __all__ = [
     "sign_up",
     "log_in",
     "log_out",
+    "get_current_user_id",
     "save_intake",
     "has_completed_intake",
     "AuthError",

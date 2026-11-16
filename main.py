@@ -63,22 +63,20 @@ class DevoyageApp(App):
         sm.add_widget(SettingsScreen(name="settings"))
         return sm
 
-    def apply_theme(self, theme_name, user_id=None, screen=None):
+    def apply_theme(self, theme_name, screen=None):
         """Switch to the light or dark palette.
 
         Widgets read their colors when they're created, so this builds a new
-        set of screens in the new colors and swaps them in. The logged-in
-        user and the current screen carry over. Does nothing if the theme
-        is already active.
+        set of screens in the new colors and swaps them in. The current
+        screen carries over; who's logged in lives in the controller session,
+        so nothing else needs passing. Does nothing if the theme is already
+        active.
         """
         if not theme.set_palette(theme_name):
             return
         old = self.root
         target = screen or old.current
         new = self._make_screens()
-        if user_id is not None:
-            new.get_screen("dashboard").current_user_id = user_id
-            new.get_screen("intake").set_current_user(user_id)
         Window.remove_widget(old)
         self.root = new
         Window.add_widget(new)

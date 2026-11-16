@@ -52,6 +52,7 @@ from views.controllers_api import (
     ValidationError,
     generate_roadmap,
     get_current_roadmap,
+    get_current_user_id,
     get_weekly_focus,
     log_out,
     set_step_status,
@@ -275,13 +276,12 @@ class DashboardErrorView(BoxLayout):
 # ---------------------------------------------------------------------------
 
 class DashboardScreen(Screen):
-    # Who's signed in. LoginScreen.submit() (and IntakeScreen.submit()) set
-    # this, the same way the Phase 1 screens hand identity to each other.
-    # PLACEHOLDER: the spec says the controller layer should track the
-    # logged-in user_id in one place and views shouldn't pass it around.
-    # No such controller exists on main yet, so this follows the existing
-    # screens rather than inventing a new mechanism.
-    current_user_id = None
+    @property
+    def current_user_id(self):
+        # Who's signed in comes from the controller's session
+        # (controllers.auth.get_current_user_id), never from screens
+        # handing the id to each other.
+        return get_current_user_id()
 
     stacked = BooleanProperty(False)
     has_settings = BooleanProperty(False)
@@ -480,8 +480,6 @@ class DashboardScreen(Screen):
     # ---- buttons ----------------------------------------------------------
 
     def edit_intake(self):
-        # Same identity handoff the Phase 1 screens use (see current_user_id).
-        self.manager.get_screen("intake").set_current_user(self.current_user_id)
         self.manager.current = "intake"
 
     def go_to_settings(self):
@@ -492,11 +490,6 @@ class DashboardScreen(Screen):
         log_out()  # controller clears its session state
         self._generation_id += 1  # any generation still running is now stale
         self._generating = False
-        self.current_user_id = None
-        # The intake screen holds the user id too (Phase 1 design); clear it so
-        # the next person can't submit an intake as the previous user.
-        if self.manager.has_screen("intake"):
-            self.manager.get_screen("intake").set_current_user(None)
         self._stop_body_animations()
         self.ids.body.clear_widgets()  # don't flash this roadmap at the next user
         self._body_view = None

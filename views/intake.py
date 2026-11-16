@@ -35,7 +35,7 @@ from kivy.uix.textinput import TextInput
 
 from views import components  # noqa: F401  (Card, OptionButton, ErrorBox used below and in intake.kv)
 from views.components import Card, OptionButton
-from views.controllers_api import save_intake, ValidationError  # swap point: see views/controllers_api.py
+from views.controllers_api import save_intake, get_current_user_id, ValidationError  # swap point: see views/controllers_api.py
 from views.icons import icon
 from views.theme import C
 
@@ -180,7 +180,6 @@ class StepDot(BoxLayout):
 
 
 class IntakeScreen(Screen):
-    current_user_id = None
 
     step_index = NumericProperty(0)
     eyebrow = StringProperty("")
@@ -191,6 +190,7 @@ class IntakeScreen(Screen):
     clock_char = StringProperty(icon("clock"))
 
     def __init__(self, **kwargs):
+        self._answers_owner = None  # whose answers self.answers holds
         self._reset_answers()
         self._option_widgets = {}
         self._dots = []
@@ -201,16 +201,19 @@ class IntakeScreen(Screen):
         self._build_steps_bar()
         self._show_step()
 
-    # ---- identity (same handoff the other screens use) ----------------------
+    # ---- identity: the controller's session is the source of truth ----------
 
-    def set_current_user(self, user_id):
-        if user_id != self.current_user_id:
+    @property
+    def current_user_id(self):
+        return get_current_user_id()
+
+    def on_pre_enter(self, *args):
+        if self.current_user_id != self._answers_owner:
             # A different person: never show the previous person's answers.
+            self._answers_owner = self.current_user_id
             self._reset_answers()
             self.step_index = 0
-            if self._dots:
-                self._show_step()
-        self.current_user_id = user_id
+            self._show_step()
 
     def _reset_answers(self):
         self.answers = {"coursework": [], "carrying": [], "skills": {}, "free_text": ""}
@@ -442,9 +445,7 @@ class IntakeScreen(Screen):
             self.ids.error_box.message = "Please check your answers: " + str(e)
             return
 
-        user_id = self.current_user_id
         self._reset_answers()
         self.step_index = 0
         self._show_step()
-        self.manager.get_screen("dashboard").current_user_id = user_id
         self.manager.current = "dashboard"
