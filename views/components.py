@@ -7,6 +7,7 @@ components.kv; this file only declares the classes and their properties.
   Icon          one Lucide icon:   Icon: name: "house"
   IconButton    a clickable icon
   TickBox       a checkbox in the Milestone 3 style
+  OptionButton  a selectable answer (radio or checkbox style)
   Chip          small rounded label ("2-3 weeks", "Done")
   PrimaryButton / GhostButton / DangerButton
                 the three button styles; optional icon on the left
@@ -65,6 +66,14 @@ class TickBox(ButtonBehavior, Widget):
     """A checkbox drawn in the Milestone 3 style. Not named CheckBox because
     Kivy already has a widget with that name."""
     checked = BooleanProperty(False)
+
+
+class OptionButton(ButtonBehavior, BoxLayout):
+    """A selectable answer pill: radio dot (single choice) or checkbox
+    square (multi choice). Selected = blue tint and blue border."""
+    text = StringProperty("")
+    selected = BooleanProperty(False)
+    multi = BooleanProperty(False)
 
 
 class Chip(Label):

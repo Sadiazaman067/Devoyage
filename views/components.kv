@@ -71,6 +71,61 @@
         size: root.size
 
 
+<OptionButton>:
+    size_hint_y: None
+    height: dp(48)
+    padding: [dp(14), 0]
+    spacing: dp(10)
+    canvas.before:
+        Color:
+            rgba: theme.C.blue_tint if self.selected else (theme.C.sidebar if self.state == "down" else theme.C.bg)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
+        Color:
+            rgba: theme.C.blue if self.selected else theme.C.line
+        Line:
+            width: 1.2 if self.selected else 1
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(10))
+    Widget:
+        size_hint: None, None
+        size: dp(18), dp(18)
+        pos_hint: {"center_y": 0.5}
+        canvas:
+            Color:
+                rgba: theme.C.blue if root.selected else theme.C.checkbox
+            Line:
+                width: 1.4
+                circle: (self.center_x, self.center_y, dp(8.5)) if not root.multi else (0, 0, 0)
+                rounded_rectangle: (self.x, self.y, self.width, self.height, dp(4)) if root.multi else (0, 0, 0, 0, 1)
+            Color:
+                rgba: theme.C.blue if root.selected else (0, 0, 0, 0)
+            Ellipse:
+                pos: (self.center_x - dp(5), self.center_y - dp(5)) if not root.multi else (0, 0)
+                size: (dp(10), dp(10)) if not root.multi else (0, 0)
+            RoundedRectangle:
+                pos: self.pos if root.multi else (0, 0)
+                size: self.size if root.multi else (0, 0)
+                radius: [dp(4)]
+        Label:
+            font_name: "Icons"
+            text: icon("check") if (root.multi and root.selected) else ""
+            font_size: "13sp"
+            color: theme.C.bg
+            pos: self.parent.pos
+            size: self.parent.size
+    Label:
+        text: root.text
+        font_size: "15sp"
+        color: theme.C.ink
+        text_size: self.width, None
+        halign: "left"
+        valign: "middle"
+        shorten: True
+        shorten_from: "right"
+
+
 # ---- Chip -----------------------------------------------------------------
 <Chip>:
     font_name: "InterSemiBold"
