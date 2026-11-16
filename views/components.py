@@ -10,7 +10,11 @@ components.kv; this file only declares the classes and their properties.
   Chip          small rounded label ("2-3 weeks", "Done")
   PrimaryButton / GhostButton / DangerButton
                 the three button styles; optional icon on the left
-  TextField     bordered text input with an icon on the left
+  TextField     bordered text input with an icon on the left (and an eye
+                button for passwords)
+  ErrorBox      crimson message box under a form
+  LinkLabel     "Don't have an account? Sign up" style text link
+  AuthPanel     the dark left panel on Log in and Sign up
   Sidebar       the left navigation on every signed-in page
   AppPage       base Screen for signed-in pages: sidebar + page header
 
@@ -71,6 +75,7 @@ class Chip(Label):
 class BaseButton(ButtonBehavior, BoxLayout):
     text = StringProperty("")
     icon_name = StringProperty("")
+    icon_right = BooleanProperty(False)  # True puts the icon after the text ("Get started ->")
     fill = ColorProperty(C.blue)
     fill_down = ColorProperty(C.accent_dark)
     outline = ColorProperty((0, 0, 0, 0))
@@ -93,6 +98,40 @@ class TextField(Card):
     icon_name = StringProperty("")
     hint_text = StringProperty("")
     password = BooleanProperty(False)
+    revealable = BooleanProperty(False)  # show the eye button (password fields)
+    revealed = BooleanProperty(False)    # eye clicked: show the password as text
+    invalid = BooleanProperty(False)     # crimson border after a failed submit
+
+    @property
+    def text(self):
+        return self.ids.input.text
+
+    @text.setter
+    def text(self, value):
+        self.ids.input.text = value
+
+
+class ErrorBox(BoxLayout):
+    """Crimson-tinted message box. Collapses to nothing when message is ''."""
+    message = StringProperty("")
+
+
+class LinkLabel(Label):
+    """'Don't have an account? Sign up' -- the blue part is a link.
+    Set `prompt` and `link_text`, and handle on_follow."""
+    prompt = StringProperty("")
+    link_text = StringProperty("")
+    __events__ = ("on_follow",)
+
+    def on_ref_press(self, ref):
+        self.dispatch("on_follow")
+
+    def on_follow(self):
+        pass
+
+
+class AuthPanel(BoxLayout):
+    """The dark amethyst panel on the left of Log in and Sign up."""
 
 
 class NavItem(ButtonBehavior, BoxLayout):

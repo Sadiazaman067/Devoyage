@@ -20,16 +20,18 @@ Builder.load_file(os.path.join(os.path.dirname(__file__), "login.kv"))
 
 class LoginScreen(Screen):
     def submit(self):
-        email = self.ids.email_input.text.strip()
-        password = self.ids.password_input.text
+        email_field = self.ids.email_field
+        password_field = self.ids.password_field
+        email = email_field.text.strip()
+        password = password_field.text
 
         try:
             user_id = log_in(email, password)
         except (AuthError, ValidationError) as e:
-            self.ids.error_label.text = str(e)
+            self._show_error(str(e))
             return
 
-        self.ids.error_label.text = ""
+        self._clear_form()
 
         # Ask the controller, never the database, whether this user has
         # finished intake. No intake yet -> intake screen; otherwise dashboard.
@@ -40,5 +42,17 @@ class LoginScreen(Screen):
             self.manager.get_screen("intake").set_current_user(user_id)
             self.manager.current = "intake"
 
+    def _show_error(self, message):
+        self.ids.error_box.message = message
+        self.ids.password_field.invalid = True
+
+    def _clear_form(self):
+        # Don't leave the password sitting in the form for the next person.
+        self.ids.error_box.message = ""
+        self.ids.password_field.invalid = False
+        self.ids.password_field.text = ""
+        self.ids.password_field.revealed = False
+
     def go_to_signup(self):
+        self._clear_form()
         self.manager.current = "signup"
