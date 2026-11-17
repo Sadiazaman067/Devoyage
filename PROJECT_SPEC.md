@@ -71,6 +71,16 @@ Decided:
 * (10/19) Shared errors: `AuthError`, `ValidationError`, and `AIServiceError` live in `exceptions.py` at the project root. Every layer imports them from there.
 * (10/19) AI service contract agreed: `generate_roadmap_from_intake(intake_data: dict) -> dict` in services/ai.py, raising `AIServiceError` on failure. Details in the AI-service contract.
 * (10/19) Model-layer function names agreed, including the Settings ones (update_latest_weekly_hours, update_email, update_password_hash, clear_roadmap_data) and config.get_user_theme / set_user_theme. Full list in the Model-layer contract.
+* (11/03) Final UI adopted from the Milestone 3 UX/UI Design Document: white background; palette ink #34113F, blue #166088, mint #D4F2D2, crimson #931621; Inter for text and Lora for the Landing and Log in headlines; Lucide icons. Every signed-in page has a left sidebar (Dashboard, Career Paths, Resources Hub, Portfolio Log, Settings, Log out), replacing the top bar from the 10/27 wireframes. All colors live in views/theme.py.
+* (11/03) Sign Up adds a Confirm password field. It's checked on the screen only; `sign_up(email, password)` doesn't change.
+* (11/03) Intake is shown as 6 steps with Back and Next instead of one long form. Same `intake_data` shape and the same `save_intake(user_id, intake_data)` call.
+* (11/16) Session done (completes the 10/13 Session item): views get the logged-in user from `get_current_user_id()` through views/controllers_api.py. Screens no longer pass user_id to each other.
+* (11/16) Weekly Focus built (replaces the 10/06 deferral): `get_weekly_focus(user_id)` returns the next pending steps, 1 for under_5, 2 for 5_10, 3 for 10_15 and 15_plus.
+* (11/16) Dark mode: views/theme.py has light and dark palettes with the same color names. The user's saved theme is applied when they log in, and the app goes back to light at log out. Switching theme rebuilds the screens, since Kivy widgets read their colors when they're created.
+* (11/16) Project deadline moved to 11/26.
+* (11/17) Final sprint scope: Career Paths, Resources Hub, and Portfolio Log are built as Phase 4 (specced under "Phase 4: Tier 2 pages"). AI Chat and Friends are cut. Portfolio Log is add, list, edit, and delete, with an optional link to a roadmap step; no status field. Feature freeze 11/23; final version on main 11/25.
+* (11/17) Phase status: Phases 1-3 are implemented and merged (Settings controller in #17; step checkboxes and the Settings screen in #18). Their gates were never signed off one by one, so one Final QA gate (11/23 to 11/25, run by Sugam) covers Phases 1-4 instead. Phase 4 is open for building now.
+* (11/17) Stubs: Tami owns views/controllers_api.py and dev_stubs/. When a controller function is added to this spec, Tami adds its export to controllers_api.py (real and stub blocks) and a matching stub in dev_stubs/, in the same PR as the screen that first uses it. Controller and model owners don't edit views/ or dev_stubs/.
 
 Open (fill in as decided, with date):
 * Whether the `users` model needs a username or display-name field in addition to the currently specified fields  
@@ -82,7 +92,7 @@ The app must have: a dashboard homepage with 3+ features; 4 additional pages eac
 
 Mapping (declared in the submitted features doc):
 
-* Dashboard (3+ features): roadmap steps with reasoning, the "not now" list, progress tracking. That is three features on one screen, requirement met by our Tier 1 core.  
+* Dashboard (3+ features): roadmap steps with reasoning, the "not now" list, progress tracking, and the Weekly Focus panel (added 11/16). Four features on one screen.  
 * Additional page 1: Intake questionnaire  
 * Additional page 2: Career paths  
 * Additional page 3: Resources hub  
@@ -98,7 +108,7 @@ Use these words to mean exactly this, in code, docs, and AI chats:
 * **Step**: one item in a roadmap. Has reasoning attached. NOT called "task," "milestone," or "card."  
 * **Not-now item**: one item on the not-now list, with reasoning. Part of the same generation as the roadmap.  
 * **Status**: a step is either `pending` or `done`. Exactly these two strings in Tier 1\.  
-* **Screen**: one Kivy page. Screen names (ScreenManager ids): `landing`, `login`, `signup`, `intake`, `dashboard`, `settings`, plus Tier 2 screens when specced.
+* **Screen**: one Kivy page. Screen names (ScreenManager ids): `landing`, `login`, `signup`, `intake`, `dashboard`, `settings`, `career_paths`, `resources`, `portfolio`.
 
 ## **Architecture (MVC, one Python app)**
 
@@ -234,7 +244,7 @@ Sadia owns the implementation in SQLite; everyone conforms to these names. All n
 
 Theme has no table: it's saved per user in config.ini (see 10/19 Decision Log). weekly_hours is updated in place on the user's latest intakes row; email and password are updated in place on users.
 
-Tier 2 tables (career_paths, resources, portfolio_entries) are specced under "Tier 2 spec (11/17)" in the Phase plan. Chat is cut.
+Tier 2 tables (career_paths, resources, portfolio_entries) are specced under "Phase 4: Tier 2 pages" in the Phase plan. Chat is cut.
 
 ## **Module Contract (how views, controllers, services, and models connect)**
 
@@ -242,7 +252,7 @@ Replaces the old HTTP endpoint contract: same names and shapes, now Python funct
 
 These ownership labels are forward-looking and do not make claims about who originally implemented existing code.
 
-Tami's views call ONLY controller functions.
+Tami's views call ONLY controller functions, and only through views/controllers_api.py, so switching between the real controllers and dev_stubs/ is a change to that one file (who updates it: 11/17 Decision Log).
 
 Arnav owns controller/application orchestration going forward.
 
@@ -257,7 +267,7 @@ Forward owner: Arnav.
 * `sign_up(email, password) -> user_id` (hashes password, creates user, raises on duplicate email)  
 * `log_in(email, password) -> user_id` (raises on bad credentials)  
 * `log_out()` (clears current session state)  
-* Session: the controller layer tracks the logged-in user\_id in one place; views never pass identity around themselves.
+* `get_current_user_id() -> user_id or None` (the session: the one place the logged-in user is tracked; set by `sign_up` and `log_in`, cleared by `log_out`). Views never pass identity around themselves.
 
 > Routing (decided 10/13): after `log_in` succeeds, the app calls `has_completed_intake(user_id)` (in controllers/intake.py) to pick `intake` or `dashboard`. `log_in` itself still just returns user_id.
 
@@ -274,7 +284,7 @@ Existing controller contract:
 * `generate_roadmap(user_id) -> roadmap` (gets the latest intake, uses the AI service, validates, saves through Sadia's models, and returns the full roadmap in the same shape as `get_current_roadmap`)
 * `get_current_roadmap(user_id) -> roadmap with steps ordered by position + not_now_items`
 * `set_step_status(step_id, status) -> None` (status must be `pending` or `done`)
-* `clear_roadmap_data(user_id) -> None` (deletes all of the user's roadmaps, including history, along with their steps and not-now items, for a full reset; does not touch intake history, so the user can regenerate from their existing intake or redo intake first)
+* `get_weekly_focus(user_id) -> list of steps` (the next pending steps in position order: 1 for under_5, 2 for 5_10, 3 for 10_15 or 15_plus; `[]` if there's no roadmap yet; raises `ValidationError` if there's no intake)
 
 ### **Settings (controllers/settings.py)**
 
@@ -285,6 +295,8 @@ Forward owner: Arnav.
 * `update_weekly_hours(user_id, weekly_hours) -> None` (updates weekly_hours on the user's latest intake row; does not create a new intake)
 * `change_password(user_id, current_password, new_password) -> None` (raises AuthError if current_password is wrong; reuses the hashing logic from sign_up)
 * `change_email(user_id, new_email) -> None` (raises on duplicate email, same as sign_up)
+* `regenerate_roadmap(user_id) -> roadmap` (calls `generate_roadmap(user_id)`)
+* `clear_roadmap_data(user_id) -> None` (deletes all of the user's roadmaps, including history, along with their steps and not-now items, for a full reset; does not touch intake history, so the user can regenerate from their existing intake or redo intake first)
 
 ### **Model-layer contract**
 
@@ -323,7 +335,7 @@ Agreed 10/19. Every function takes an open sqlite3 connection first; the control
 * `get_user_theme(user_id, path=None) -> str` (falls back to the app default theme)
 * `set_user_theme(user_id, theme, path=None) -> None` (raises ValueError unless `light` or `dark`)
 
-Not built yet: update_email, update_password_hash, update_latest_weekly_hours, clear_roadmap_data (Sadia's next PR).
+Not built yet: clear_roadmap_data (Sadia, due 11/18). The others merged in #13.
 
 ### **AI-service contract**
 
@@ -430,7 +442,7 @@ Prototype code does not become production code automatically.
 
 ## **Phase plan and research briefs**
 
-Phases are sequential gates: a phase is open for building only when the previous one passes its gate.
+Phases are sequential gates: a phase is open for building only when the previous one passes its gate. (Final sprint exception, 11/17: Phases 1-3 are merged and Phase 4 is open; one Final QA gate at the end covers Phases 1-4. See the 11/17 Decision Log.)
 
 Research for a later phase can start anytime.
 
@@ -438,7 +450,7 @@ The role changes in this proposal are forward-looking. This phase plan does not 
 
 ### **Phase 1: Skeleton (Accounts \+ Intake, features F1 \+ F2)**
 
-Phase 1 completion status: **pending team confirmation**.
+Phase 1 completion status: **implemented and merged; checked by the Final QA gate (11/17)**.
 
 The implementation responsibilities for Phase 1 were carried out under the responsibility structure that existed at the time. This revised spec does not reassign credit for that work.
 
@@ -719,7 +731,7 @@ Research/possible completion work:
 * AI-service errors still fail cleanly;  
 * full end-to-end run passes on a fresh clone using only README run instructions.
 
-  ### **Phase 4+: Tier 2 pages (career paths, resources, chat)**
+  ### **Phase 4: Tier 2 pages (Career Paths, Resources Hub, Portfolio Log)**
 
 Specced here before building, same pattern:
 
@@ -759,11 +771,11 @@ The fixed forward ownership continues.
 * AI-service implementation for AI-backed features;  
 * AI-specific evaluation and failure handling.
 
-If AI chat becomes a Tier 2 feature, it naturally falls inside Sugam's AI-service domain, subject to the same prototype \-\> review \-\> integration workflow.
+AI Chat and Friends are cut for this semester (11/17 Decision Log). Sugam's role in Phase 4 is the seed content and the Final QA gate.
 
 #### **Tier 2 spec (11/17): Career Paths, Resources Hub, Portfolio Log**
 
-These are the names everyone builds to. Same rules as the rest of the spec: snake_case, models take an open connection first, controllers open and close it, views call controllers only through views/controllers_api.py. AI chat and Friends are cut for this semester.
+These are the names everyone builds to. Same rules as the rest of the spec: snake_case, models take an open connection first, controllers open and close it, views call controllers only through views/controllers_api.py. AI chat and Friends are cut (11/17 Decision Log).
 
 ##### **Data models**
 
@@ -795,7 +807,6 @@ These are the names everyone builds to. Same rules as the rest of the spec: snak
 * entry_type: `project | course | hackathon | application | other`
 * title (required, 1-120 characters)
 * start_date (required, `YYYY-MM-DD`)
-* status: `active | paused | closed` (default `active`)
 * link (optional, starts with `http://` or `https://`)
 * note (optional, max 500 characters: what you did, or what the course covered)
 * step_id (optional, foreign key -> roadmap_steps.id: the step this entry completes)
@@ -827,7 +838,6 @@ These are the names everyone builds to. Same rules as the rest of the spec: snak
 * `add_entry(conn, user_id, entry) -> entry_id`
 * `list_entries(conn, user_id, entry_type=None) -> list of dicts` (newest start_date first, then newest id; filtered when entry_type is given)
 * `update_entry(conn, user_id, entry_id, entry) -> bool` (False if no entry with that id belongs to this user)
-* `set_entry_status(conn, user_id, entry_id, status) -> bool` (status must be `active`, `paused`, or `closed`, else ValueError)
 * `delete_entry(conn, user_id, entry_id) -> bool`
 
 `models/db.py`: `init_db` also creates the three tables and runs both `seed` functions.
@@ -844,16 +854,15 @@ These are the names everyone builds to. Same rules as the rest of the spec: snak
 * `add_portfolio_entry(user_id, entry_data) -> entry_id`
 * `list_portfolio_entries(user_id, entry_type=None) -> list of entries`
 * `update_portfolio_entry(user_id, entry_id, entry_data) -> None`
-* `set_portfolio_entry_status(user_id, entry_id, status) -> None`
 * `delete_portfolio_entry(user_id, entry_id) -> None`
 
-`entry_data` is a dict: `entry_type`, `title`, `start_date`, and optionally `status`, `link`, `note`, `step_id`. The controller validates it with a Pydantic model (`PortfolioEntryData`) and raises `ValidationError` with a readable message for bad input. If `step_id` is given, it must be a step in the user's current roadmap. If the model returns False (no such entry for this user), the controller raises `ValidationError("Entry not found.")`.
+`entry_data` is a dict: `entry_type`, `title`, `start_date`, and optionally `link`, `note`, `step_id`. The controller validates it with a Pydantic model (`PortfolioEntryData`) and raises `ValidationError` with a readable message for bad input. If `step_id` is given, it must be a step in the user's current roadmap. If the model returns False (no such entry for this user), the controller raises `ValidationError("Entry not found.")`.
 
 ##### **Screens (Tami)**
 
 * `career_paths`: the four paths on the left, the selected path's details on the right. Calls `list_career_paths()`.
 * `resources`: category chips and a search box (search filters titles on the screen), a grid of cards with "Why it's here" and an Open button that opens the url in the browser. Calls `list_resources(category)`.
-* `portfolio`: a summary bar (count per type), a type filter, the entry list with status, edit, and delete, and an Add entry form. Calls the five portfolio functions. "Link to a step" offers the steps from `get_current_roadmap`.
+* `portfolio`: a summary bar (count per type), a type filter, the entry list with edit and delete, and an Add entry form. Calls the four portfolio functions. "Link to a step" offers the steps from `get_current_roadmap`.
 
 ##### **Dates**
 
@@ -861,6 +870,19 @@ These are the names everyone builds to. Same rules as the rest of the spec: snak
 * Sadia: models and seeds by Fri 11/20
 * Arnav: controllers by Sat 11/21
 * Tami: screens by Sun 11/22 (built against dev_stubs first, then switched)
+
+##### **Final QA gate (11/23 to 11/25)**
+
+One gate for everything, replacing the separate Phase 1-3 sign-offs (11/17 Decision Log). Sugam runs it on a clean install (fresh clone, new venv, `pip install -r requirements.txt`, no devoyage.db or config.ini), records pass or fail for each line in the Testing section, and sends failures to the owner. The project is done when every line passes on main.
+
+1. `python -m pytest` passes with no failures.
+2. Sign up, finish the intake in under 5 minutes, and a roadmap with 5-9 steps and 2-5 not-now items appears.
+3. Check off a step, log out, log back in: the step is still done and Progress and Weekly Focus match.
+4. Settings: theme, weekly hours, email, and password changes still apply after closing and reopening the app. Weekly Focus shows 1, 2, or 3 steps to match the hours.
+5. Clear roadmap data removes the roadmap and keeps the intake; Regenerate builds a new one.
+6. Career Paths shows all 4 paths; Resources Hub filters by category and Open launches the browser.
+7. Portfolio Log: add, edit, filter, and delete entries; they persist after restarting the app; a second account can't see the first account's entries.
+8. Turning off the internet before generating shows the error card instead of crashing.
 
 ## **Backend \+ AI collaboration rules**
 
@@ -937,7 +959,7 @@ Each phase's tester coordinates:
 * QA documentation;  
 * gate sign-off.
 
-No phase moves forward until its tester has run and recorded the gate checklist.
+No phase moves forward until its tester has run and recorded the gate checklist. (Exception, 11/17: the Final QA gate covers Phases 1-4 together.)
 
 ## **Working agreements**
 
