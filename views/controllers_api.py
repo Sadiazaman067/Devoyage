@@ -25,6 +25,7 @@ from exceptions import AuthError, ValidationError, AIServiceError
 #     change_password, regenerate_roadmap, clear_roadmap_data, make_weekly_focus,
 # )
 # get_weekly_focus = make_weekly_focus(get_current_roadmap)
+# from dev_stubs.content_stub import list_career_paths, list_resources
 
 # ---- B: real controllers (ACTIVE) -------------------------------------------
 from controllers.auth import sign_up, log_in, log_out, get_current_user_id
@@ -37,6 +38,14 @@ from controllers.settings import (
     change_password, regenerate_roadmap, clear_roadmap_data,
 )
 from controllers.roadmap import get_weekly_focus
+
+# Career Paths + Resources Hub. TEMPORARY try/except: Arnav's
+# controllers/content.py isn't on main yet. Until it is, the stand-ins in
+# dev_stubs/content_stub.py fill in. After it merges, keep only the import.
+try:
+    from controllers.content import list_career_paths, list_resources
+except ImportError:
+    from dev_stubs.content_stub import list_career_paths, list_resources
 
 __all__ = [
     "sign_up",
@@ -57,6 +66,8 @@ __all__ = [
     "change_password",
     "regenerate_roadmap",
     "clear_roadmap_data",
+    "list_career_paths",
+    "list_resources",
     "AIServiceError",
     "ValidationError",
 ]

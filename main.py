@@ -29,8 +29,8 @@ from views.dashboard import DashboardScreen
 from views.placeholder_pages import (
     CareerPathsScreen,
     PortfolioScreen,
-    ResourcesScreen,
 )
+from views.resources import ResourcesScreen
 from views.settings import SettingsScreen
 from views import theme
 

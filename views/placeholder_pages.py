@@ -1,6 +1,6 @@
 """
 Signed-in pages that exist in the sidebar but aren't built yet: Career
-Paths, Resources Hub, Portfolio Log.
+Paths and Portfolio Log.
 
 Each one is an AppPage (sidebar + header) with a "coming soon" card, so the
 navigation works end to end today. When a page is built, give it its own
@@ -56,14 +56,6 @@ class CareerPathsScreen(_PlaceholderPage):
     subtitle = "What each path in CS looks like, and how to start."
     icon_name = "briefcase"
     blurb = "Software engineering, data, security, and machine learning: what the work is, the skills it needs, and a first step for each."
-
-
-class ResourcesScreen(_PlaceholderPage):
-    nav_name = "resources"
-    title = "Resources Hub"
-    subtitle = "Tools, courses, and communities, picked by our team."
-    icon_name = "book-open"
-    blurb = "Every resource here is picked by someone on the team, with one line on why it's on the list."
 
 
 class PortfolioScreen(_PlaceholderPage):
