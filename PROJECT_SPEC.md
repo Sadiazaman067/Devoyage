@@ -234,7 +234,7 @@ Sadia owns the implementation in SQLite; everyone conforms to these names. All n
 
 Theme has no table: it's saved per user in config.ini (see 10/19 Decision Log). weekly_hours is updated in place on the user's latest intakes row; email and password are updated in place on users.
 
-Tier 2 tables (resources, career paths, chat) get added here before anyone builds them.
+Tier 2 tables (career_paths, resources, portfolio_entries) are specced under "Tier 2 spec (11/17)" in the Phase plan. Chat is cut.
 
 ## **Module Contract (how views, controllers, services, and models connect)**
 
@@ -760,6 +760,107 @@ The fixed forward ownership continues.
 * AI-specific evaluation and failure handling.
 
 If AI chat becomes a Tier 2 feature, it naturally falls inside Sugam's AI-service domain, subject to the same prototype \-\> review \-\> integration workflow.
+
+#### **Tier 2 spec (11/17): Career Paths, Resources Hub, Portfolio Log**
+
+These are the names everyone builds to. Same rules as the rest of the spec: snake_case, models take an open connection first, controllers open and close it, views call controllers only through views/controllers_api.py. AI chat and Friends are cut for this semester.
+
+##### **Data models**
+
+**career_paths** (seeded content, read-only in the app)
+
+* id (primary key)
+* slug (unique): `software_engineering | data | security | machine_learning`
+* title (e.g. "Software Engineering")
+* summary (1-2 sentences: what the work is)
+* day_to_day (2-3 sentences: what a normal week looks like)
+* skills: list of strings (stored as JSON)
+* first_steps: list of strings, 3-5 things a beginner can do this semester (stored as JSON)
+* position (integer, display order)
+
+**resources** (seeded content, read-only in the app)
+
+* id (primary key)
+* title
+* url (starts with `https://`)
+* category: `learning | practice | tools | communities | career`
+* why (one sentence: why it's on the list)
+* is_free: `0 | 1`
+* position (integer, display order within the whole list)
+
+**portfolio_entries** (each user's own records)
+
+* id (primary key)
+* user_id (foreign key -> users.id)
+* entry_type: `project | course | hackathon | application | other`
+* title (required, 1-120 characters)
+* start_date (required, `YYYY-MM-DD`)
+* status: `active | paused | closed` (default `active`)
+* link (optional, starts with `http://` or `https://`)
+* note (optional, max 500 characters: what you did, or what the course covered)
+* step_id (optional, foreign key -> roadmap_steps.id: the step this entry completes)
+* created_at
+
+> `clear_roadmap_data` deletes roadmap steps, so before it deletes them it sets `step_id` to NULL on that user's portfolio entries. The entries themselves are kept.
+
+##### **Seed content**
+
+`models/seed_data.py` holds two plain lists, `CAREER_PATHS` and `RESOURCES`. Each item is a dict with exactly the fields above (minus `id`). Sugam writes the content; Sadia's seed functions load it. 4 career paths and about 15 resources, at least 2 per category.
+
+##### **Model-layer additions (Sadia)**
+
+`models/career_paths.py`
+
+* `create_table(conn) -> None`
+* `seed(conn) -> None` (inserts `CAREER_PATHS` only if the table is empty, so it's safe on every start)
+* `list_career_paths(conn) -> list of dicts` (in position order; skills and first_steps decoded back to lists)
+
+`models/resources.py`
+
+* `create_table(conn) -> None`
+* `seed(conn) -> None` (inserts `RESOURCES` only if the table is empty)
+* `list_resources(conn, category=None) -> list of dicts` (in position order; filtered when category is given)
+
+`models/portfolio.py`
+
+* `create_table(conn) -> None`
+* `add_entry(conn, user_id, entry) -> entry_id`
+* `list_entries(conn, user_id, entry_type=None) -> list of dicts` (newest start_date first, then newest id; filtered when entry_type is given)
+* `update_entry(conn, user_id, entry_id, entry) -> bool` (False if no entry with that id belongs to this user)
+* `set_entry_status(conn, user_id, entry_id, status) -> bool` (status must be `active`, `paused`, or `closed`, else ValueError)
+* `delete_entry(conn, user_id, entry_id) -> bool`
+
+`models/db.py`: `init_db` also creates the three tables and runs both `seed` functions.
+
+##### **Controller additions (Arnav)**
+
+`controllers/content.py`
+
+* `list_career_paths() -> list of career paths`
+* `list_resources(category=None) -> list of resources` (raises `ValidationError` for an unknown category)
+
+`controllers/portfolio.py`
+
+* `add_portfolio_entry(user_id, entry_data) -> entry_id`
+* `list_portfolio_entries(user_id, entry_type=None) -> list of entries`
+* `update_portfolio_entry(user_id, entry_id, entry_data) -> None`
+* `set_portfolio_entry_status(user_id, entry_id, status) -> None`
+* `delete_portfolio_entry(user_id, entry_id) -> None`
+
+`entry_data` is a dict: `entry_type`, `title`, `start_date`, and optionally `status`, `link`, `note`, `step_id`. The controller validates it with a Pydantic model (`PortfolioEntryData`) and raises `ValidationError` with a readable message for bad input. If `step_id` is given, it must be a step in the user's current roadmap. If the model returns False (no such entry for this user), the controller raises `ValidationError("Entry not found.")`.
+
+##### **Screens (Tami)**
+
+* `career_paths`: the four paths on the left, the selected path's details on the right. Calls `list_career_paths()`.
+* `resources`: category chips and a search box (search filters titles on the screen), a grid of cards with "Why it's here" and an Open button that opens the url in the browser. Calls `list_resources(category)`.
+* `portfolio`: a summary bar (count per type), a type filter, the entry list with status, edit, and delete, and an Add entry form. Calls the five portfolio functions. "Link to a step" offers the steps from `get_current_roadmap`.
+
+##### **Dates**
+
+* Sugam: seed_data.py content by Wed 11/18
+* Sadia: models and seeds by Fri 11/20
+* Arnav: controllers by Sat 11/21
+* Tami: screens by Sun 11/22 (built against dev_stubs first, then switched)
 
 ## **Backend \+ AI collaboration rules**
 
