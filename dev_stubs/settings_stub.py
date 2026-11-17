@@ -1,11 +1,10 @@
 """
 Stand-ins for controllers/settings.py and controllers.roadmap.get_weekly_focus
-(Arnav's feat/settings-weekly-focus branch), with the same names and
+(Arnav, #17), with the same names and
 signatures. In memory only.
 
-Used two ways (see views/controllers_api.py):
-  - in stub mode (block A), always
-  - in real mode (block B), only until Arnav's branch is merged into main
+Used only in stub mode (block A of views/controllers_api.py). The real
+versions merged into main in #17.
 """
 from exceptions import AuthError, ValidationError
 
