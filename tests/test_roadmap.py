@@ -80,6 +80,7 @@ class TestRoadmapController(unittest.TestCase):
 
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
+
         self.db_path = os.path.join(
             self.temp_dir.name,
             "test_devoyage.db",
@@ -88,6 +89,7 @@ class TestRoadmapController(unittest.TestCase):
         self.real_get_connection = db.get_connection
 
         conn = self.real_get_connection(self.db_path)
+
         db.init_db(conn)
 
         self.user_id = users.create_user(
@@ -108,14 +110,20 @@ class TestRoadmapController(unittest.TestCase):
             "controllers.roadmap.db.get_connection",
             side_effect=self.get_test_connection,
         )
+
         self.connection_patcher.start()
+
 
     def tearDown(self):
         self.connection_patcher.stop()
         self.temp_dir.cleanup()
 
+
     def get_test_connection(self):
-        return self.real_get_connection(self.db_path)
+        return self.real_get_connection(
+            self.db_path
+        )
+
 
     def test_generate_roadmap_saves_and_returns_full_roadmap(self):
         received_intake = {}
@@ -128,25 +136,69 @@ class TestRoadmapController(unittest.TestCase):
             "controllers.roadmap.generate_roadmap_from_intake",
             side_effect=fake_generate_roadmap_from_intake,
         ):
-            result = roadmap_controller.generate_roadmap(self.user_id)
+            result = roadmap_controller.generate_roadmap(
+                self.user_id
+            )
 
-        self.assertEqual(received_intake, SAMPLE_INTAKE)
-        self.assertNotIn("id", received_intake)
-        self.assertNotIn("user_id", received_intake)
-        self.assertNotIn("created_at", received_intake)
+        self.assertEqual(
+            received_intake,
+            SAMPLE_INTAKE,
+        )
 
-        self.assertEqual(result["user_id"], self.user_id)
-        self.assertEqual(result["intake_id"], self.intake_id)
-        self.assertEqual(len(result["steps"]), 5)
-        self.assertEqual(len(result["not_now_items"]), 2)
+        self.assertNotIn(
+            "id",
+            received_intake,
+        )
 
-        self.assertEqual(result["steps"][0]["position"], 1)
-        self.assertEqual(result["steps"][1]["position"], 2)
+        self.assertNotIn(
+            "user_id",
+            received_intake,
+        )
+
+        self.assertNotIn(
+            "created_at",
+            received_intake,
+        )
+
+        self.assertEqual(
+            result["user_id"],
+            self.user_id,
+        )
+
+        self.assertEqual(
+            result["intake_id"],
+            self.intake_id,
+        )
+
+        self.assertEqual(
+            len(result["steps"]),
+            5,
+        )
+
+        self.assertEqual(
+            len(result["not_now_items"]),
+            2,
+        )
+
+        self.assertEqual(
+            result["steps"][0]["position"],
+            1,
+        )
+
+        self.assertEqual(
+            result["steps"][1]["position"],
+            2,
+        )
 
         for step in result["steps"]:
-            self.assertEqual(step["status"], "pending")
+            self.assertEqual(
+                step["status"],
+                "pending",
+            )
 
-        conn = self.real_get_connection(self.db_path)
+        conn = self.real_get_connection(
+            self.db_path
+        )
 
         stored = roadmaps.get_current_roadmap(
             conn,
@@ -155,15 +207,26 @@ class TestRoadmapController(unittest.TestCase):
 
         conn.close()
 
-        self.assertEqual(stored["id"], result["id"])
-        self.assertEqual(stored["user_id"], self.user_id)
+        self.assertEqual(
+            stored["id"],
+            result["id"],
+        )
+
+        self.assertEqual(
+            stored["user_id"],
+            self.user_id,
+        )
+
 
     def test_generate_roadmap_uses_latest_intake(self):
         newer_intake = SAMPLE_INTAKE.copy()
+
         newer_intake["weekly_hours"] = "under_5"
         newer_intake["goal"] = "fundamentals"
 
-        conn = self.real_get_connection(self.db_path)
+        conn = self.real_get_connection(
+            self.db_path
+        )
 
         newer_intake_id = intakes.save_intake(
             conn,
@@ -183,14 +246,30 @@ class TestRoadmapController(unittest.TestCase):
             "controllers.roadmap.generate_roadmap_from_intake",
             side_effect=fake_generate_roadmap_from_intake,
         ):
-            result = roadmap_controller.generate_roadmap(self.user_id)
+            result = roadmap_controller.generate_roadmap(
+                self.user_id
+            )
 
-        self.assertEqual(received_intake["weekly_hours"], "under_5")
-        self.assertEqual(received_intake["goal"], "fundamentals")
-        self.assertEqual(result["intake_id"], newer_intake_id)
+        self.assertEqual(
+            received_intake["weekly_hours"],
+            "under_5",
+        )
+
+        self.assertEqual(
+            received_intake["goal"],
+            "fundamentals",
+        )
+
+        self.assertEqual(
+            result["intake_id"],
+            newer_intake_id,
+        )
+
 
     def test_generate_roadmap_without_intake_raises_validation_error(self):
-        conn = self.real_get_connection(self.db_path)
+        conn = self.real_get_connection(
+            self.db_path
+        )
 
         user_without_intake = users.create_user(
             conn,
@@ -203,14 +282,19 @@ class TestRoadmapController(unittest.TestCase):
         with patch(
             "controllers.roadmap.generate_roadmap_from_intake"
         ) as mock_ai:
-            with self.assertRaises(ValidationError):
+
+            with self.assertRaises(
+                ValidationError
+            ):
                 roadmap_controller.generate_roadmap(
                     user_without_intake
                 )
 
         mock_ai.assert_not_called()
 
-        conn = self.real_get_connection(self.db_path)
+        conn = self.real_get_connection(
+            self.db_path
+        )
 
         stored = roadmaps.get_current_roadmap(
             conn,
@@ -219,19 +303,30 @@ class TestRoadmapController(unittest.TestCase):
 
         conn.close()
 
-        self.assertIsNone(stored)
+        self.assertIsNone(
+            stored
+        )
+
 
     def test_ai_service_error_does_not_save_roadmap(self):
+
         with patch(
             "controllers.roadmap.generate_roadmap_from_intake",
-            side_effect=AIServiceError("AI service failed"),
+            side_effect=AIServiceError(
+                "AI service failed"
+            ),
         ):
-            with self.assertRaises(AIServiceError):
+
+            with self.assertRaises(
+                AIServiceError
+            ):
                 roadmap_controller.generate_roadmap(
                     self.user_id
                 )
 
-        conn = self.real_get_connection(self.db_path)
+        conn = self.real_get_connection(
+            self.db_path
+        )
 
         stored = roadmaps.get_current_roadmap(
             conn,
@@ -240,10 +335,15 @@ class TestRoadmapController(unittest.TestCase):
 
         conn.close()
 
-        self.assertIsNone(stored)
+        self.assertIsNone(
+            stored
+        )
+
 
     def test_get_current_roadmap_returns_saved_roadmap(self):
-        conn = self.real_get_connection(self.db_path)
+        conn = self.real_get_connection(
+            self.db_path
+        )
 
         roadmaps.create_roadmap(
             conn,
@@ -259,12 +359,295 @@ class TestRoadmapController(unittest.TestCase):
             self.user_id
         )
 
-        self.assertIsNotNone(result)
-        self.assertEqual(result["user_id"], self.user_id)
-        self.assertEqual(result["intake_id"], self.intake_id)
-        self.assertEqual(len(result["steps"]), 5)
-        self.assertEqual(len(result["not_now_items"]), 2)
-        self.assertEqual(result["steps"][0]["position"], 1)
+        self.assertIsNotNone(
+            result
+        )
+
+        self.assertEqual(
+            result["user_id"],
+            self.user_id,
+        )
+
+        self.assertEqual(
+            result["intake_id"],
+            self.intake_id,
+        )
+
+        self.assertEqual(
+            len(result["steps"]),
+            5,
+        )
+
+        self.assertEqual(
+            len(result["not_now_items"]),
+            2,
+        )
+
+        self.assertEqual(
+            result["steps"][0]["position"],
+            1,
+        )
+
+
+    def test_get_weekly_focus_under_5_returns_one_step(self):
+        conn = self.real_get_connection(
+            self.db_path
+        )
+
+        intakes.update_latest_weekly_hours(
+            conn,
+            self.user_id,
+            "under_5",
+        )
+
+        roadmaps.create_roadmap(
+            conn,
+            self.user_id,
+            self.intake_id,
+            SAMPLE_AI_RESULT["steps"],
+            SAMPLE_AI_RESULT["not_now"],
+        )
+
+        conn.close()
+
+        result = roadmap_controller.get_weekly_focus(
+            self.user_id
+        )
+
+        self.assertEqual(
+            len(result),
+            1,
+        )
+
+        self.assertEqual(
+            result[0]["title"],
+            SAMPLE_AI_RESULT["steps"][0]["title"],
+        )
+
+
+    def test_get_weekly_focus_5_to_10_returns_two_steps(self):
+        conn = self.real_get_connection(
+            self.db_path
+        )
+
+        roadmaps.create_roadmap(
+            conn,
+            self.user_id,
+            self.intake_id,
+            SAMPLE_AI_RESULT["steps"],
+            SAMPLE_AI_RESULT["not_now"],
+        )
+
+        conn.close()
+
+        result = roadmap_controller.get_weekly_focus(
+            self.user_id
+        )
+
+        self.assertEqual(
+            len(result),
+            2,
+        )
+
+        self.assertEqual(
+            result[0]["title"],
+            SAMPLE_AI_RESULT["steps"][0]["title"],
+        )
+
+        self.assertEqual(
+            result[1]["title"],
+            SAMPLE_AI_RESULT["steps"][1]["title"],
+        )
+
+
+    def test_get_weekly_focus_10_to_15_returns_three_steps(self):
+        conn = self.real_get_connection(
+            self.db_path
+        )
+
+        intakes.update_latest_weekly_hours(
+            conn,
+            self.user_id,
+            "10_15",
+        )
+
+        roadmaps.create_roadmap(
+            conn,
+            self.user_id,
+            self.intake_id,
+            SAMPLE_AI_RESULT["steps"],
+            SAMPLE_AI_RESULT["not_now"],
+        )
+
+        conn.close()
+
+        result = roadmap_controller.get_weekly_focus(
+            self.user_id
+        )
+
+        self.assertEqual(
+            len(result),
+            3,
+        )
+
+        self.assertEqual(
+            result[0]["title"],
+            SAMPLE_AI_RESULT["steps"][0]["title"],
+        )
+
+        self.assertEqual(
+            result[1]["title"],
+            SAMPLE_AI_RESULT["steps"][1]["title"],
+        )
+
+        self.assertEqual(
+            result[2]["title"],
+            SAMPLE_AI_RESULT["steps"][2]["title"],
+        )
+
+
+    def test_get_weekly_focus_15_plus_returns_three_steps(self):
+        conn = self.real_get_connection(
+            self.db_path
+        )
+
+        intakes.update_latest_weekly_hours(
+            conn,
+            self.user_id,
+            "15_plus",
+        )
+
+        roadmaps.create_roadmap(
+            conn,
+            self.user_id,
+            self.intake_id,
+            SAMPLE_AI_RESULT["steps"],
+            SAMPLE_AI_RESULT["not_now"],
+        )
+
+        conn.close()
+
+        result = roadmap_controller.get_weekly_focus(
+            self.user_id
+        )
+
+        self.assertEqual(
+            len(result),
+            3,
+        )
+
+        self.assertEqual(
+            result[0]["title"],
+            SAMPLE_AI_RESULT["steps"][0]["title"],
+        )
+
+        self.assertEqual(
+            result[1]["title"],
+            SAMPLE_AI_RESULT["steps"][1]["title"],
+        )
+
+        self.assertEqual(
+            result[2]["title"],
+            SAMPLE_AI_RESULT["steps"][2]["title"],
+        )
+
+
+    def test_get_weekly_focus_skips_done_steps(self):
+        conn = self.real_get_connection(
+            self.db_path
+        )
+
+        intakes.update_latest_weekly_hours(
+            conn,
+            self.user_id,
+            "10_15",
+        )
+
+        roadmaps.create_roadmap(
+            conn,
+            self.user_id,
+            self.intake_id,
+            SAMPLE_AI_RESULT["steps"],
+            SAMPLE_AI_RESULT["not_now"],
+        )
+
+        stored = roadmaps.get_current_roadmap(
+            conn,
+            self.user_id,
+        )
+
+        first_step_id = stored["steps"][0]["id"]
+
+        roadmaps.set_step_status(
+            conn,
+            first_step_id,
+            "done",
+            self.user_id,
+        )
+
+        conn.close()
+
+        result = roadmap_controller.get_weekly_focus(
+            self.user_id
+        )
+
+        self.assertEqual(
+            len(result),
+            3,
+        )
+
+        self.assertEqual(
+            result[0]["title"],
+            SAMPLE_AI_RESULT["steps"][1]["title"],
+        )
+
+        self.assertEqual(
+            result[1]["title"],
+            SAMPLE_AI_RESULT["steps"][2]["title"],
+        )
+
+        self.assertEqual(
+            result[2]["title"],
+            SAMPLE_AI_RESULT["steps"][3]["title"],
+        )
+
+        for step in result:
+            self.assertEqual(
+                step["status"],
+                "pending",
+            )
+
+
+    def test_get_weekly_focus_without_roadmap_returns_empty_list(self):
+        result = roadmap_controller.get_weekly_focus(
+            self.user_id
+        )
+
+        self.assertEqual(
+            result,
+            [],
+        )
+
+
+    def test_get_weekly_focus_without_intake_raises_validation_error(self):
+        conn = self.real_get_connection(
+            self.db_path
+        )
+
+        user_without_intake = users.create_user(
+            conn,
+            "weekly-focus-no-intake@example.com",
+            "fake_hash_for_test",
+        )
+
+        conn.close()
+
+        with self.assertRaises(
+            ValidationError
+        ):
+            roadmap_controller.get_weekly_focus(
+                user_without_intake
+            )
 
 
 if __name__ == "__main__":
