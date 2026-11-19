@@ -1,6 +1,5 @@
 """
-Signed-in pages that exist in the sidebar but aren't built yet: Career
-Paths and Portfolio Log.
+Signed-in pages that exist in the sidebar but aren't built yet: Portfolio Log.
 
 Each one is an AppPage (sidebar + header) with a "coming soon" card, so the
 navigation works end to end today. When a page is built, give it its own
@@ -48,14 +47,6 @@ class _PlaceholderPage(AppPage):
         card.add_widget(body)
         self.ids.content.add_widget(card)
         self.ids.content.add_widget(Label())  # spacer pushes the card up
-
-
-class CareerPathsScreen(_PlaceholderPage):
-    nav_name = "career_paths"
-    title = "Career Paths"
-    subtitle = "What each path in CS looks like, and how to start."
-    icon_name = "briefcase"
-    blurb = "Software engineering, data, security, and machine learning: what the work is, the skills it needs, and a first step for each."
 
 
 class PortfolioScreen(_PlaceholderPage):

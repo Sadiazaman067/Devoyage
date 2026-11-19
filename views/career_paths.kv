@@ -1,0 +1,194 @@
+#:import theme views.theme
+
+# Career Paths (Milestone 3 design). CareerPathsScreen is an AppPage
+# (sidebar + header); career_paths.py puts a CareerPathsBody in its content.
+
+<PathItem>:
+    size_hint_y: None
+    height: max(dp(84), text_box.height + dp(28))
+    padding: [dp(16), dp(14)]
+    spacing: dp(14)
+    radius: 14
+    bg_color: theme.C.blue_tint if self.selected else theme.C.bg
+    border_color: theme.C.blue_line if self.selected else theme.C.line
+    Icon:
+        name: root.icon_name
+        color: theme.C.blue
+        size: dp(44), dp(44)
+        pos_hint: {"center_y": 0.5}
+        canvas.before:
+            Color:
+                rgba: theme.C.bg if root.selected else theme.C.sidebar
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(10)]
+    BoxLayout:
+        id: text_box
+        orientation: "vertical"
+        size_hint_y: None
+        height: self.minimum_height
+        spacing: dp(2)
+        pos_hint: {"center_y": 0.5}
+        Label:
+            text: root.title
+            font_name: "InterSemiBold"
+            font_size: "16sp"
+            color: theme.C.ink
+            text_size: self.width, None
+            size_hint_y: None
+            height: self.texture_size[1]
+        Label:
+            text: root.blurb
+            font_size: "13sp"
+            color: theme.C.muted
+            text_size: self.width, None
+            size_hint_y: None
+            height: self.texture_size[1]
+    Icon:
+        name: "arrow-right"
+        color: theme.C.blue if root.selected else theme.C.checkbox
+        font_size: "18sp"
+        pos_hint: {"center_y": 0.5}
+
+<SectionTitle@Label>:
+    font_name: "InterSemiBold"
+    font_size: "17sp"
+    color: theme.C.ink
+    text_size: self.width, None
+    size_hint_y: None
+    height: self.texture_size[1] + dp(4)
+
+<FirstStepRow>:
+    size_hint_y: None
+    height: max(dp(36), step_text.height + dp(8))
+    spacing: dp(14)
+    Label:
+        text: str(root.number)
+        font_name: "InterSemiBold"
+        font_size: "14sp"
+        color: theme.C.mint_ink
+        size_hint: None, None
+        size: dp(30), dp(30)
+        pos_hint: {"top": 1}
+        canvas.before:
+            Color:
+                rgba: theme.C.mint
+            Ellipse:
+                pos: self.pos
+                size: self.size
+    Label:
+        id: step_text
+        text: root.text
+        font_size: "15sp"
+        color: theme.C.ink
+        text_size: self.width, None
+        size_hint_y: None
+        height: self.texture_size[1]
+        pos_hint: {"top": 0.92}
+
+<CareerPathsBody>:
+    spacing: dp(24)
+    BoxLayout:
+        id: path_list
+        orientation: "vertical"
+        size_hint_x: 0.4
+        spacing: dp(14)
+    Card:
+        orientation: "vertical"
+        padding: [dp(28), dp(26)]
+        ScrollView:
+            do_scroll_x: False
+            bar_width: dp(5)
+            bar_color: theme.C.checkbox
+            bar_inactive_color: theme.C.line
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                padding: [0, 0, dp(10), dp(6)]
+                spacing: dp(14)
+                BoxLayout:
+                    size_hint_y: None
+                    height: max(dp(56), detail_head.height)
+                    spacing: dp(16)
+                    Icon:
+                        name: root.icon_name
+                        color: theme.C.blue
+                        font_size: "26sp"
+                        size: dp(56), dp(56)
+                        canvas.before:
+                            Color:
+                                rgba: theme.C.blue_tint
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [dp(12)]
+                    BoxLayout:
+                        id: detail_head
+                        orientation: "vertical"
+                        size_hint_y: None
+                        height: self.minimum_height
+                        pos_hint: {"center_y": 0.5}
+                        Label:
+                            text: root.title
+                            bold: True
+                            font_size: "26sp"
+                            color: theme.C.ink
+                            text_size: self.width, None
+                            size_hint_y: None
+                            height: self.texture_size[1]
+                        Label:
+                            text: root.summary
+                            font_size: "15sp"
+                            color: theme.C.muted
+                            text_size: self.width, None
+                            size_hint_y: None
+                            height: self.texture_size[1]
+                Widget:
+                    size_hint_y: None
+                    height: dp(4)
+                SectionTitle:
+                    text: "What the work is like"
+                Label:
+                    text: root.day_to_day
+                    font_size: "15sp"
+                    color: theme.C.ink
+                    line_height: 1.3
+                    text_size: self.width, None
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                SectionTitle:
+                    text: "Skills you'll need"
+                StackLayout:
+                    id: skills_box
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: dp(8)
+                SectionTitle:
+                    text: "How to start as a beginner"
+                BoxLayout:
+                    id: steps_box
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: dp(8)
+                Widget:
+                    size_hint_y: None
+                    height: dp(6)
+                BoxLayout:
+                    size_hint_y: None
+                    height: dp(46)
+                    PrimaryButton:
+                        text: "See related resources"
+                        icon_name: "arrow-right"
+                        icon_right: True
+                        on_release: root.screen.go_to_resources()
+                    Widget:
+        Label:
+            id: error_label
+            text: ""
+            font_size: "15sp"
+            color: theme.C.crimson
+            size_hint_y: None
+            height: dp(30) if self.text else 0
