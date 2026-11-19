@@ -22,58 +22,150 @@ anywhere.
 
 PALETTES = {
     "light": {
-        # ---- Base palette (from the wireframe) --------------------------
-        # The wireframe page background is white, so `background` is
-        # #FFFFFF rather than the #F6F4EF in the original color table.
+        # ---- Milestone 3 palette (adopted 11/03, UX/UI Design Document) --
+        # These are the names new code should use. Every text color below
+        # passes the 4.5:1 contrast check on the background it sits on.
+        "ink": "#34113F",           # dark amethyst: headings and body text
+        "blue": "#166088",          # primary actions, active nav item, checks
+        "mint": "#D4F2D2",          # Weekly Focus panel, "done" chips
+        "mint_ink": "#1E5631",      # text on mint
+        "crimson": "#931621",       # Not Now, danger actions, errors
+        "bg": "#FFFFFF",            # page background
+        "sidebar": "#F7F7F9",       # sidebar background
+        "line": "#E7E4EA",          # card borders and dividers
+        "muted": "#5E5566",         # secondary text
+        "blue_tint": "#E8F1F6",     # active nav item, blue chips
+        "crimson_tint": "#F8ECEE",  # Not Now panel, error boxes
+        "chip_gray": "#F1EFF3",     # neutral chips (time estimates)
+        "danger_border": "#E8C9CE", # outline of danger buttons and error boxes
+        "checkbox": "#C9C3CF",      # unchecked checkbox outline
+        "mint_soft": "#EFF8EE",     # Weekly Focus panel fill
+        "mint_line": "#BFE3BC",     # Weekly Focus panel border
+        "blue_line": "#A9CBDD",     # border of the expanded roadmap step
+        "notnow_divider": "#EBD3D7",# lines between Not Now items
+
+        # ---- Older names, kept so existing screens keep working ----------
+        # The dashboard and forms were written against these. They now map
+        # onto the Milestone 3 colors above, so every screen recolors from
+        # this one file. Rename them in the .kv files as each screen is
+        # rebuilt, then delete them here.
         "background": "#FFFFFF",
-        "top_bar": "#FBFAF6",
+        "top_bar": "#F7F7F9",
         "surface": "#FFFFFF",
-        "border": "#E5E0D3",
-        "text": "#201C17",
-        "text_body": "#2B2620",
-        "text_muted": "#5A5346",
-        "text_faint": "#837A6B",
-        "accent": "#2F6F62",
-        "accent_soft": "#EFF6F3",
-        "accent_dark": "#1F4B41",
-        "why_bg": "#F7FAF8",
-        "notnow_bg": "#FBF5EA",
-        "notnow_border": "#C9B48A",
-        "notnow_card": "#FFFDF8",
-        "notnow_text": "#5C4B2A",
-        "error_border": "#D9B8A8",
+        "border": "#E7E4EA",
+        "text": "#34113F",
+        "text_body": "#34113F",
+        "text_muted": "#5E5566",
+        "text_faint": "#6F6776",
+        "accent": "#166088",
+        "accent_soft": "#E8F1F6",
+        "accent_dark": "#0F4A6A",
+        "why_bg": "#F7F7F9",
+        "notnow_bg": "#F8ECEE",
+        "notnow_border": "#E8C9CE",
+        "notnow_card": "#FFFFFF",
+        "notnow_text": "#5E5566",
+        "error_border": "#E8C9CE",
+        "on_accent": "#FFFFFF",
+        "eyebrow": "#166088",
+        "chip_bg": "#F1EFF3",
+        "why_text": "#34113F",
+        "step_outline": "#C9C3CF",
+        "text_label": "#34113F",
+        "notnow_eyebrow": "#931621",
+        "notnow_heading": "#34113F",
+        "notnow_subtitle": "#5E5566",
+        "skeleton_bar": "#EEEBF0",
+        "skeleton_why": "#F4F2F6",
+        "skeleton_notnow_bar": "#F2DDE1",
+        "spinner_track": "#D3E3EC",
 
-        # ---- Extra dashboard colors taken from dashboard.html ----------
-        "on_accent": "#FFFFFF",          # text/number drawn on an accent fill
-        "eyebrow": "#7C6E4B",            # small uppercase labels
-        "chip_bg": "#F3F0E8",            # est_time pill
-        "why_text": "#33413C",           # reasoning text inside the why box
-        "step_outline": "#DBD5C8",       # pending step circle, secondary button outline
-        "text_label": "#423C33",         # "2 of 6 done", secondary button text
-        "notnow_eyebrow": "#8A6A2E",
-        "notnow_heading": "#3D2F14",
-        "notnow_subtitle": "#6E5A33",
-
-        # ---- Loading-state skeletons (dashboard_states.html) -----------
-        "skeleton_bar": "#ECE8DE",
-        "skeleton_why": "#F1F5F3",
-        "skeleton_notnow_bar": "#F1E6D0",
-        "spinner_track": "#DCE9E4",
-
-        # ---- Phase 1 form screens --------------------------------------
-        # login/signup/intake still use Kivy's default dark background.
-        # These reproduce the literals they used before centralizing
-        # (0.8,0.2,0.2 / 0.45 grey / 0.5 grey / fully transparent), so
-        # those screens look the same.
+        # ---- Phase 1 form screens (login, signup, intake) ---------------
+        # Unchanged for now: these screens still draw on Kivy's default dark
+        # background. They get the new colors when they're rebuilt.
         "form_error": "#CC3333",
         "form_subtitle": "#737373",
         "form_hint": "#808080",
         "clear": "#00000000",
     },
-    # "dark": {...}  -- Phase 3 (Settings page). Same keys, different values.
+    "dark": {
+        # Same names as "light". Text colors pass 4.5:1 on the dark
+        # backgrounds they sit on (see tests/test_dashboard_helpers.py).
+        "ink": "#EDE7F2",
+        "blue": "#7BBDE3",
+        "mint": "#24452E",
+        "mint_ink": "#BFE8BC",
+        "crimson": "#F2959E",
+        "bg": "#17121C",
+        "sidebar": "#1F1925",
+        "line": "#352D3D",
+        "muted": "#B3AABC",
+        "blue_tint": "#1D3644",
+        "crimson_tint": "#3A1F26",
+        "chip_gray": "#2B2432",
+        "danger_border": "#6E3039",
+        "checkbox": "#5D5466",
+        "mint_soft": "#1A2B20",
+        "mint_line": "#2F5A39",
+        "blue_line": "#2F6E91",
+        "notnow_divider": "#4C2C33",
+
+        "background": "#17121C",
+        "top_bar": "#1F1925",
+        "surface": "#17121C",
+        "border": "#352D3D",
+        "text": "#EDE7F2",
+        "text_body": "#EDE7F2",
+        "text_muted": "#B3AABC",
+        "text_faint": "#9A91A3",
+        "accent": "#7BBDE3",
+        "accent_soft": "#1D3644",
+        "accent_dark": "#5FA3CC",
+        "why_bg": "#1F1925",
+        "notnow_bg": "#3A1F26",
+        "notnow_border": "#6E3039",
+        "notnow_card": "#17121C",
+        "notnow_text": "#B3AABC",
+        "error_border": "#6E3039",
+        "on_accent": "#17121C",
+        "eyebrow": "#7BBDE3",
+        "chip_bg": "#2B2432",
+        "why_text": "#EDE7F2",
+        "step_outline": "#5D5466",
+        "text_label": "#EDE7F2",
+        "notnow_eyebrow": "#F2959E",
+        "notnow_heading": "#EDE7F2",
+        "notnow_subtitle": "#B3AABC",
+        "skeleton_bar": "#2B2432",
+        "skeleton_why": "#221C28",
+        "skeleton_notnow_bar": "#4C2C33",
+        "spinner_track": "#1D3644",
+
+        "form_error": "#F2959E",
+        "form_subtitle": "#B3AABC",
+        "form_hint": "#9A91A3",
+        "clear": "#00000000",
+    },
 }
 
 COLORS = PALETTES["light"]
+current_theme = "light"
+
+
+def set_palette(name):
+    """Switch every color to PALETTES[name]. Returns True if it changed.
+
+    Widgets read their colors when they're created, so after this the app
+    rebuilds its screens (DevoyageApp.apply_theme in main.py).
+    """
+    global COLORS, current_theme
+    if name not in PALETTES:
+        name = "light"
+    if name == current_theme:
+        return False
+    COLORS = PALETTES[name]
+    current_theme = name
+    return True
 
 
 def hex_to_rgba(hex_color, alpha=None):

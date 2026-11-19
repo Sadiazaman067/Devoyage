@@ -80,3 +80,38 @@ def headline(steps):
 def use_stacked_layout(width_dp):
     """True when the window is too narrow for steps + the 340dp not-now panel side by side."""
     return width_dp < STACK_BREAKPOINT_DP
+
+
+# ---- Milestone 3 dashboard (11/11) -------------------------------------------
+
+def subtitle_text(generated_at):
+    """The line under the 'Dashboard' title."""
+    date = format_generated_date(generated_at)
+    base = "Your personalized roadmap for the semester"
+    return f"{base} · generated {date}" if date else base
+
+
+def progress_markup(steps):
+    """'[b]1 of 6[/b] steps done' (Kivy markup: the count is bold)."""
+    return f"[b]{count_done(steps)} of {len(steps)}[/b] steps done"
+
+
+def progress_percent(steps):
+    """'17%' for the Progress card. Rounded to a whole number."""
+    return f"{round(progress_fraction(steps) * 100)}%"
+
+
+def short_time(est_time, max_len=18):
+    """Shorten the AI's time estimate so it fits in a chip.
+
+    '6-8 weeks, ~5 hours per week' -> '6-8 weeks'. Keeps the part before the
+    first comma, semicolon, or parenthesis; if that's still long, cuts at a
+    word and adds '...'.
+    """
+    text = (est_time or "").strip()
+    for mark in (",", ";", "("):
+        text = text.split(mark)[0].strip()
+    if len(text) <= max_len:
+        return text
+    cut = text[:max_len].rsplit(" ", 1)[0]
+    return cut + "…"

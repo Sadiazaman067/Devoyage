@@ -1,58 +1,75 @@
 #:import theme views.theme
 
+# Log in (Milestone 3 design): dark panel on the left, form on the right.
+# Shared pieces (AuthPanel, TextField, ErrorBox, LinkLabel) are in components.kv.
+
 <LoginScreen>:
+    canvas.before:
+        Color:
+            rgba: theme.C.bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
     BoxLayout:
-        orientation: "vertical"
-        padding: 48
-        spacing: 16
-
-        Label:
-            text: "Log in"
-            font_size: "26sp"
-            bold: True
-            size_hint_y: None
-            height: "44dp"
-
-        Label:
-            text: "Email"
-            size_hint_y: None
-            height: "22dp"
-        TextInput:
-            id: email_input
-            multiline: False
-            size_hint_y: None
-            height: "44dp"
-
-        Label:
-            text: "Password"
-            size_hint_y: None
-            height: "22dp"
-        TextInput:
-            id: password_input
-            password: True
-            multiline: False
-            size_hint_y: None
-            height: "44dp"
-
-        Label:
-            id: error_label
-            text: ""
-            color: theme.C.form_error
-            size_hint_y: None
-            height: "24dp"
-
-        Button:
-            text: "Log in"
-            size_hint_y: None
-            height: "48dp"
-            on_press: root.submit()
-
-        Widget:
-            # spacer
-
-        Button:
-            text: "Need an account? Sign up"
-            size_hint_y: None
-            height: "36dp"
-            background_color: theme.C.clear
-            on_press: root.go_to_signup()
+        AuthPanel:
+            size_hint_x: 0.54
+        AnchorLayout:
+            size_hint_x: 0.46
+            anchor_x: "center"
+            anchor_y: "center"
+            BoxLayout:
+                orientation: "vertical"
+                size_hint: None, None
+                width: min(dp(420), self.parent.width - dp(48))
+                height: self.minimum_height
+                spacing: dp(10)
+                Label:
+                    text: "Welcome back"
+                    bold: True
+                    font_size: "32sp"
+                    color: theme.C.ink
+                    size_hint_y: None
+                    height: dp(42)
+                    text_size: self.size
+                    halign: "left"
+                    valign: "middle"
+                Label:
+                    text: "Log in to continue your roadmap."
+                    font_size: "16sp"
+                    color: theme.C.muted
+                    size_hint_y: None
+                    height: dp(26)
+                    text_size: self.size
+                    halign: "left"
+                    valign: "top"
+                Widget:
+                    size_hint_y: None
+                    height: dp(8)
+                FieldTitle:
+                    text: "Email"
+                TextField:
+                    id: email_field
+                    icon_name: "mail"
+                    hint_text: "Enter your email"
+                FieldTitle:
+                    text: "Password"
+                TextField:
+                    id: password_field
+                    icon_name: "lock"
+                    hint_text: "Enter your password"
+                    password: True
+                    revealable: True
+                ErrorBox:
+                    id: error_box
+                Widget:
+                    size_hint_y: None
+                    height: dp(4)
+                PrimaryButton:
+                    text: "Log in"
+                    size_hint_x: 1
+                    height: dp(50)
+                    on_release: root.submit()
+                LinkLabel:
+                    prompt: "Don't have an account?"
+                    link_text: "Sign up"
+                    on_follow: root.go_to_signup()

@@ -13,6 +13,7 @@ from exceptions import AuthError, ValidationError
 
 
 _fake_users = {}
+_session = {"user_id": None}  # same idea as controllers.auth.currentUser
 _next_id = [1]
 _users_with_intake = set()
 
@@ -27,6 +28,7 @@ def sign_up(email, password):
     user_id = _next_id[0]
     _next_id[0] += 1
     _fake_users[email] = {"user_id": user_id, "password": password}
+    _session["user_id"] = user_id
     return user_id
 
 
@@ -36,11 +38,16 @@ def log_in(email, password):
     record = _fake_users.get(email)
     if record is None or record["password"] != password:
         raise AuthError("Incorrect email or password.")
+    _session["user_id"] = record["user_id"]
     return record["user_id"]
 
 
 def log_out():
-    pass
+    _session["user_id"] = None
+
+
+def get_current_user_id():
+    return _session["user_id"]
 
 
 def save_intake(user_id, intake_data):

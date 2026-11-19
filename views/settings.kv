@@ -1,0 +1,283 @@
+#:import theme views.theme
+
+# Settings page (Milestone 3 design). SettingsScreen is an AppPage (sidebar
+# + header, components.kv); settings.py puts a SettingsBody in its content.
+
+<SettingsCardTitle@BoxLayout>:
+    title: ""
+    subtitle: ""
+    orientation: "vertical"
+    size_hint_y: None
+    height: self.minimum_height
+    spacing: dp(2)
+    Label:
+        text: root.title
+        bold: True
+        font_size: "20sp"
+        color: theme.C.ink
+        text_size: self.width, None
+        size_hint_y: None
+        height: self.texture_size[1]
+    Label:
+        text: root.subtitle
+        font_size: "14sp"
+        color: theme.C.muted
+        text_size: self.width, None
+        size_hint_y: None
+        height: self.texture_size[1]
+
+# One row in "Your roadmap": text on the left, a button on the right.
+<RoadmapActionRow@BoxLayout>:
+    title: ""
+    body: ""
+    title_color: theme.C.ink
+    size_hint_y: None
+    height: max(dp(64), action_text.height + dp(20))
+    padding: [0, dp(10), 0, 0]
+    spacing: dp(16)
+    canvas.before:
+        Color:
+            rgba: theme.C.line
+        Rectangle:
+            pos: self.x, self.top - dp(1)
+            size: self.width, dp(1)
+    BoxLayout:
+        id: action_text
+        orientation: "vertical"
+        size_hint_y: None
+        height: self.minimum_height
+        pos_hint: {"center_y": 0.5}
+        Label:
+            text: root.title
+            font_name: "InterSemiBold"
+            font_size: "16sp"
+            color: root.title_color
+            text_size: self.width, None
+            size_hint_y: None
+            height: self.texture_size[1]
+        Label:
+            text: root.body
+            font_size: "14sp"
+            color: theme.C.muted
+            text_size: self.width, None
+            size_hint_y: None
+            height: self.texture_size[1]
+
+<SettingsBody>:
+    do_scroll_x: False
+    bar_width: dp(6)
+    bar_color: theme.C.checkbox
+    bar_inactive_color: theme.C.line
+    BoxLayout:
+        size_hint_y: None
+        height: self.minimum_height
+        padding: [0, 0, dp(10), dp(24)]
+        spacing: dp(22)
+
+        # ---- Left column ----
+        BoxLayout:
+            orientation: "vertical"
+            size_hint_y: None
+            height: self.minimum_height
+            spacing: dp(22)
+            pos_hint: {"top": 1}
+
+            Card:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                padding: [dp(24), dp(22)]
+                spacing: dp(16)
+                SettingsCardTitle:
+                    title: "Appearance"
+                    subtitle: "Choose light or dark mode."
+                BoxLayout:
+                    size_hint: None, None
+                    size: dp(300), dp(48)
+                    spacing: dp(10)
+                    OptionButton:
+                        text: "Light"
+                        selected: root.theme_name == "light"
+                        on_release: root.screen.set_theme("light")
+                    OptionButton:
+                        text: "Dark"
+                        selected: root.theme_name == "dark"
+                        on_release: root.screen.set_theme("dark")
+
+            Card:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                padding: [dp(24), dp(22)]
+                spacing: dp(16)
+                SettingsCardTitle:
+                    title: "Weekly hours"
+                    subtitle: "Update your available time without redoing the whole questionnaire. Your Weekly Focus adjusts to match."
+                GridLayout:
+                    cols: 2
+                    size_hint_y: None
+                    height: self.minimum_height
+                    row_force_default: True
+                    row_default_height: dp(48)
+                    spacing: dp(10)
+                    OptionButton:
+                        text: "Under 5 hours"
+                        selected: root.weekly_hours == "under_5"
+                        on_release: root.screen.set_hours("under_5")
+                    OptionButton:
+                        text: "5-10 hours"
+                        selected: root.weekly_hours == "5_10"
+                        on_release: root.screen.set_hours("5_10")
+                    OptionButton:
+                        text: "10-15 hours"
+                        selected: root.weekly_hours == "10_15"
+                        on_release: root.screen.set_hours("10_15")
+                    OptionButton:
+                        text: "15+ hours"
+                        selected: root.weekly_hours == "15_plus"
+                        on_release: root.screen.set_hours("15_plus")
+
+            Card:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                padding: [dp(24), dp(22)]
+                spacing: dp(12)
+                SettingsCardTitle:
+                    title: "Your roadmap"
+                    subtitle: "Regenerate when your situation changes, or start over completely."
+                RoadmapActionRow:
+                    title: "Regenerate roadmap"
+                    body: "Builds a new roadmap from your current answers."
+                    GhostButton:
+                        text: "Building..." if root.regenerating else "Regenerate"
+                        icon_name: "refresh"
+                        disabled: root.regenerating
+                        opacity: 0.6 if root.regenerating else 1
+                        pos_hint: {"center_y": 0.5}
+                        on_release: root.screen.regenerate()
+                RoadmapActionRow:
+                    title: "Clear roadmap data"
+                    title_color: theme.C.crimson
+                    body: "Deletes your roadmaps and progress. Your intake answers are kept."
+                    DangerButton:
+                        text: "Clear data"
+                        icon_name: "trash"
+                        pos_hint: {"center_y": 0.5}
+                        on_release: root.screen.confirm_clear()
+
+            ErrorBox:
+                message: root.left_error
+            SuccessBox:
+                message: root.left_success
+
+        # ---- Right column: account ----
+        Card:
+            orientation: "vertical"
+            size_hint_y: None
+            height: self.minimum_height
+            padding: [dp(24), dp(22)]
+            spacing: dp(10)
+            pos_hint: {"top": 1}
+            SettingsCardTitle:
+                title: "Account"
+                subtitle: "Update your email or password."
+            Widget:
+                size_hint_y: None
+                height: dp(4)
+            FieldTitle:
+                text: "New email"
+            TextField:
+                id: email_field
+                icon_name: "mail"
+                hint_text: "you@school.edu"
+            BoxLayout:
+                size_hint_y: None
+                height: dp(46)
+                Widget:
+                GhostButton:
+                    text: "Save email"
+                    on_release: root.screen.save_email()
+            Widget:
+                size_hint_y: None
+                height: dp(10)
+                canvas:
+                    Color:
+                        rgba: theme.C.line
+                    Rectangle:
+                        pos: self.x, self.center_y
+                        size: self.width, dp(1)
+            FieldTitle:
+                text: "Current password"
+            TextField:
+                id: current_password_field
+                icon_name: "lock"
+                password: True
+                revealable: True
+            FieldTitle:
+                text: "New password"
+            TextField:
+                id: new_password_field
+                icon_name: "lock"
+                password: True
+                revealable: True
+            Label:
+                text: "At least 8 characters."
+                font_size: "13sp"
+                color: theme.C.muted
+                size_hint_y: None
+                height: dp(18)
+                text_size: self.size
+                halign: "left"
+            BoxLayout:
+                size_hint_y: None
+                height: dp(46)
+                Widget:
+                PrimaryButton:
+                    text: "Update password"
+                    on_release: root.screen.update_password()
+            ErrorBox:
+                message: root.account_error
+            SuccessBox:
+                message: root.account_success
+
+# Confirmation before Clear roadmap data.
+<ConfirmClear>:
+    size_hint: None, None
+    size: dp(460), dp(230)
+    auto_dismiss: True
+    background: ""
+    background_color: 0, 0, 0, 0
+    overlay_color: 0, 0, 0, 0.45
+    Card:
+        orientation: "vertical"
+        padding: [dp(26), dp(22)]
+        spacing: dp(12)
+        Label:
+            text: "Clear your roadmap?"
+            bold: True
+            font_size: "20sp"
+            color: theme.C.ink
+            text_size: self.width, None
+            size_hint_y: None
+            height: self.texture_size[1]
+        Label:
+            text: "This deletes your roadmaps and checked-off progress. It can't be undone. Your intake answers are kept."
+            font_size: "15sp"
+            color: theme.C.muted
+            text_size: self.width, None
+            size_hint_y: None
+            height: self.texture_size[1]
+        Widget:
+        BoxLayout:
+            size_hint_y: None
+            height: dp(46)
+            spacing: dp(12)
+            Widget:
+            GhostButton:
+                text: "Cancel"
+                on_release: root.dismiss()
+            DangerButton:
+                text: "Clear data"
+                icon_name: "trash"
+                on_release: root.confirmed()

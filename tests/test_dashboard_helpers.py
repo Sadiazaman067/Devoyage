@@ -17,6 +17,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from views.dashboard_helpers import (  # noqa: E402
     count_done,
+    progress_markup,
+    progress_percent,
+    short_time,
+    subtitle_text,
     eyebrow_text,
     format_generated_date,
     headline,
@@ -113,6 +117,34 @@ def test_stacked_layout_breakpoint():
     assert use_stacked_layout(1200) is False
 
 
+# ---- Milestone 3 dashboard (11/11) -----------------------------------------
+
+def _steps(*statuses):
+    return [{"id": i, "status": status} for i, status in enumerate(statuses, start=1)]
+
+
+def test_subtitle_text():
+    assert subtitle_text("2026-10-27 12:00:00") == "Your personalized roadmap for the semester · generated Oct 27"
+    assert subtitle_text(None) == "Your personalized roadmap for the semester"
+
+
+def test_progress_markup_and_percent():
+    steps = _steps("done", "pending", "pending", "pending", "pending", "pending")
+    assert progress_markup(steps) == "[b]1 of 6[/b] steps done"
+    assert progress_percent(steps) == "17%"
+    assert progress_percent([]) == "0%"
+
+
+def test_short_time():
+    assert short_time("6-8 weeks, ~5 hours per week") == "6-8 weeks"
+    assert short_time("4-6 weeks (overlapping with Step 1)") == "4-6 weeks"
+    assert short_time("Ongoing") == "Ongoing"
+    assert short_time("") == ""
+    assert short_time(None) == ""
+    long_text = short_time("Throughout the whole semester")
+    assert long_text.endswith("…") and len(long_text) <= 19
+
+
 # ---- theme ------------------------------------------------------------------
 
 def test_hex_to_rgba():
@@ -134,6 +166,14 @@ def test_hex_to_rgba_rejects_bad_input():
 def test_every_palette_color_parses():
     for name in PALETTES["light"]:
         assert len(rgba(name)) == 4
+    for palette in PALETTES.values():
+        for value in palette.values():
+            assert len(hex_to_rgba(value)) == 4
+
+
+def test_dark_palette_has_every_light_color():
+    # A missing name would crash the dark theme the moment a screen used it.
+    assert set(PALETTES["dark"]) == set(PALETTES["light"])
 
 
 if __name__ == "__main__":
