@@ -212,15 +212,23 @@ class DashboardRoadmapView(ScrollView):
         self.percent_text = progress_percent(steps)
 
         # ---- Weekly Focus: the controller picks 1-3 steps from weekly hours ----
+        # An empty list and a controller error are different things: an empty
+        # list means there's nothing left to focus on; an error means we
+        # couldn't find out, so say that instead of showing a success message.
         focus_box = self.ids.focus_box
         focus_box.clear_widgets()
         try:
             focus = get_weekly_focus(self.screen.current_user_id)
-        except ValidationError:
+        except ValidationError as error:
             focus = []
-        self.focus_subtitle = (
-            "Your next steps this week" if focus else "You've finished every step. Nice work."
-        )
+            self.focus_subtitle = f"Couldn't load your Weekly Focus: {error}"
+        else:
+            if focus:
+                self.focus_subtitle = "Your next steps this week"
+            elif steps and all(step.get("status") == DONE for step in steps):
+                self.focus_subtitle = "You've finished every step. Nice work."
+            else:
+                self.focus_subtitle = "Nothing to focus on yet."
         for step in focus:
             focus_box.add_widget(FocusItem(
                 step_id=step.get("id"),
@@ -436,15 +444,6 @@ class DashboardScreen(Screen):
         roadmap = get_current_roadmap(self.current_user_id)
         if roadmap is not None:
             self.render_roadmap(roadmap)
-
-    def forget_roadmap(self):
-        """Called after Clear roadmap data: drop what's on screen, so the next
-        visit to the dashboard reads (and builds) a fresh roadmap."""
-        self._stop_body_animations()
-        self.ids.body.clear_widgets()
-        self._body_view = None
-        self._roadmap_id = None
-        self._expanded_ids = set()
 
     def toggle_expanded(self, step_id):
         if step_id in self._expanded_ids:
