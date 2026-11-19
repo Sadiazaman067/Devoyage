@@ -63,12 +63,12 @@ class SettingsBody(ScrollView):
 
 
 class ConfirmClear(ModalView):
-    on_yes = ObjectProperty(None)
+    when_confirmed = ObjectProperty(None)
 
     def confirmed(self):
         self.dismiss()
-        if self.on_yes:
-            self.on_yes()
+        if self.when_confirmed:
+            self.when_confirmed()
 
 
 class SettingsScreen(AppPage):
@@ -189,7 +189,7 @@ class SettingsScreen(AppPage):
             self.manager.current = "dashboard"
 
     def confirm_clear(self):
-        ConfirmClear(on_yes=self._clear).open()
+        ConfirmClear(when_confirmed=self._clear).open()
 
     def _clear(self):
         try:
