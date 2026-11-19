@@ -12,20 +12,28 @@ controller (via views/controllers_api.py):
     change_password(user_id, current_password, new_password)
     clear_roadmap_data(user_id)                keeps intake answers
 
-Regenerate reuses the dashboard's generation (background thread + loading
-state), which calls generate_roadmap -- the same thing regenerate_roadmap does.
+    regenerate_roadmap(user_id)               builds a new roadmap (the AI call)
+
+Regenerate can take up to a minute, so it runs on a background thread (same
+pattern as the dashboard) and the page stays usable. When it finishes, the
+app goes to the dashboard, which reads the new roadmap from the controller.
+Settings never calls another screen's methods; it only navigates.
 """
 import os
+import threading
+from functools import partial
 
 from kivy.app import App
+from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.logger import Logger
-from kivy.properties import ObjectProperty, StringProperty
+from kivy.properties import BooleanProperty, ObjectProperty, StringProperty
 from kivy.uix.modalview import ModalView
 from kivy.uix.scrollview import ScrollView
 
 from views.components import AppPage
 from views.controllers_api import (
+    AIServiceError,
     AuthError,
     ValidationError,
     change_email,
@@ -33,6 +41,7 @@ from views.controllers_api import (
     clear_roadmap_data,
     get_current_user_id,
     get_settings,
+    regenerate_roadmap,
     update_theme,
     update_weekly_hours,
 )
@@ -50,6 +59,7 @@ class SettingsBody(ScrollView):
     left_success = StringProperty("")
     account_error = StringProperty("")
     account_success = StringProperty("")
+    regenerating = BooleanProperty(False)
 
 
 class ConfirmClear(ModalView):
@@ -145,9 +155,38 @@ class SettingsScreen(AppPage):
     # ---- roadmap actions ------------------------------------------------------
 
     def regenerate(self):
-        dashboard = self.manager.get_screen("dashboard")
-        dashboard.start_generation()  # shows the loading state right away
-        self.manager.current = "dashboard"
+        if self.body.regenerating:
+            return  # a double click shouldn't start two AI calls
+        self.body.regenerating = True
+        self._left(success="Building your new roadmap. This can take up to a minute.")
+        threading.Thread(
+            target=self._regenerate_in_background,
+            args=(self.user_id,),
+            daemon=True,
+        ).start()
+
+    def _regenerate_in_background(self, user_id):
+        # Worker thread: no widgets here. Hand the result back with Clock.
+        try:
+            regenerate_roadmap(user_id)
+        except (AIServiceError, ValidationError, AuthError) as error:
+            Clock.schedule_once(partial(self._on_regenerate_done, user_id, str(error)))
+        except Exception as error:  # noqa: BLE001
+            Logger.exception("Settings: regenerate_roadmap failed")
+            Clock.schedule_once(partial(self._on_regenerate_done, user_id, f"Unexpected error: {error}"))
+        else:
+            Clock.schedule_once(partial(self._on_regenerate_done, user_id, ""))
+
+    def _on_regenerate_done(self, user_id, error, dt):
+        self.body.regenerating = False
+        if user_id != self.user_id:
+            return  # someone logged out while it ran; this result isn't theirs
+        if error:
+            self._left(error=f"Couldn't build a new roadmap: {error}")
+            return
+        self._left(success="Your new roadmap is ready.")
+        if self.manager.current == "settings":
+            self.manager.current = "dashboard"
 
     def confirm_clear(self):
         ConfirmClear(on_yes=self._clear).open()
@@ -163,5 +202,4 @@ class SettingsScreen(AppPage):
             Logger.exception("Settings: clear_roadmap_data failed")
             self._left(error=f"Couldn't clear your roadmap: {error}")
             return
-        self.manager.get_screen("dashboard").forget_roadmap()
         self._left(success="Roadmap cleared. Your intake answers are kept.")

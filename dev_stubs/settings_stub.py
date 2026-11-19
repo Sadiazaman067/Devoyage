@@ -1,10 +1,11 @@
 """
 Stand-ins for controllers/settings.py and controllers.roadmap.get_weekly_focus
-(Arnav, #17), with the same names and
+(Arnav's feat/settings-weekly-focus branch), with the same names and
 signatures. In memory only.
 
-Used only in stub mode (block A of views/controllers_api.py). The real
-versions merged into main in #17.
+Used two ways (see views/controllers_api.py):
+  - in stub mode (block A), always
+  - in real mode (block B), only until Arnav's branch is merged into main
 """
 from exceptions import AuthError, ValidationError
 
@@ -47,11 +48,13 @@ def change_password(user_id, current_password, new_password):
 
 
 def regenerate_roadmap(user_id):
-    raise AuthError("Regenerate isn't available in stub mode.")
+    from dev_stubs.roadmap_stub import generate_roadmap
+    return generate_roadmap(user_id)
 
 
 def clear_roadmap_data(user_id):
-    pass
+    from dev_stubs import roadmap_stub
+    roadmap_stub._roadmaps_by_user.pop(user_id, None)
 
 
 def make_weekly_focus(get_current_roadmap):

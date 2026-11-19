@@ -150,8 +150,10 @@
                     title: "Regenerate roadmap"
                     body: "Builds a new roadmap from your current answers."
                     GhostButton:
-                        text: "Regenerate"
+                        text: "Building..." if root.regenerating else "Regenerate"
                         icon_name: "refresh"
+                        disabled: root.regenerating
+                        opacity: 0.6 if root.regenerating else 1
                         pos_hint: {"center_y": 0.5}
                         on_release: root.screen.regenerate()
                 RoadmapActionRow:
