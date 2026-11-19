@@ -26,8 +26,8 @@ from views.login import LoginScreen
 from views.signup import SignUpScreen
 from views.intake import IntakeScreen
 from views.dashboard import DashboardScreen
-from views.placeholder_pages import PortfolioScreen
 from views.career_paths import CareerPathsScreen
+from views.portfolio import PortfolioScreen
 from views.resources import ResourcesScreen
 from views.settings import SettingsScreen
 from views import theme

@@ -53,8 +53,9 @@ def regenerate_roadmap(user_id):
 
 
 def clear_roadmap_data(user_id):
-    from dev_stubs import roadmap_stub
+    from dev_stubs import portfolio_stub, roadmap_stub
     roadmap_stub._roadmaps_by_user.pop(user_id, None)
+    portfolio_stub.unlink_steps(user_id)  # spec: entries stay, step links go
 
 
 def make_weekly_focus(get_current_roadmap):
