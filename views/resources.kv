@@ -1,0 +1,121 @@
+#:import theme views.theme
+
+# Resources Hub (Milestone 3 design). ResourcesScreen is an AppPage
+# (sidebar + header); resources.py puts a ResourcesBody in its content.
+
+<CategoryChip>:
+    size_hint: None, None
+    size: self.texture_size[0] + dp(32), dp(40)
+    font_name: "InterSemiBold"
+    font_size: "14sp"
+    color: theme.C.bg if self.active else theme.C.ink
+    canvas.before:
+        Color:
+            rgba: theme.C.blue if self.active else theme.C.bg
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.height / 2]
+        Color:
+            rgba: theme.C.blue if self.active else theme.C.line
+        Line:
+            width: 1
+            rounded_rectangle: (self.x, self.y, self.width, self.height, self.height / 2)
+
+<ResourceCard>:
+    orientation: "vertical"
+    size_hint_y: None
+    height: dp(210)
+    padding: [dp(20), dp(18)]
+    spacing: dp(12)
+    BoxLayout:
+        size_hint_y: None
+        height: dp(44)
+        spacing: dp(12)
+        Label:
+            text: root.initials
+            font_name: "InterSemiBold"
+            font_size: "14sp"
+            color: theme.C.blue
+            size_hint_x: None
+            width: dp(44)
+            canvas.before:
+                Color:
+                    rgba: theme.C.sidebar
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [dp(10)]
+                Color:
+                    rgba: theme.C.line
+                Line:
+                    width: 1
+                    rounded_rectangle: (self.x, self.y, self.width, self.height, dp(10))
+        Label:
+            text: root.title
+            bold: True
+            font_size: "17sp"
+            color: theme.C.ink
+            text_size: self.size
+            halign: "left"
+            valign: "middle"
+            max_lines: 2
+        IconButton:
+            name: "external-link"
+            size: dp(30), dp(30)
+            pos_hint: {"center_y": 0.5}
+            on_release: root.open_link()
+    Label:
+        markup: True
+        text: "[b]Why it's here:[/b] " + root.why
+        font_size: "14sp"
+        color: theme.C.muted
+        line_height: 1.25
+        text_size: self.width, self.height
+        valign: "top"
+    BoxLayout:
+        size_hint_y: None
+        height: dp(28)
+        spacing: dp(8)
+        Chip:
+            text: root.category_label
+            fill: root.chip_fill
+            color: root.chip_text
+        Chip:
+            text: "Free"
+            fill: theme.C.chip_gray
+            color: theme.C.muted
+            opacity: 1 if root.is_free else 0
+        Widget:
+
+<ResourcesBody>:
+    orientation: "vertical"
+    spacing: dp(16)
+    TextField:
+        id: search_field
+        icon_name: "search"
+        hint_text: 'Search resources (e.g. "Python", "internships")'
+    BoxLayout:
+        id: chips
+        size_hint_y: None
+        height: dp(40)
+        spacing: dp(10)
+    ScrollView:
+        do_scroll_x: False
+        bar_width: dp(6)
+        bar_color: theme.C.checkbox
+        bar_inactive_color: theme.C.line
+        GridLayout:
+            id: grid
+            cols: max(1, int(self.width / dp(290)))
+            size_hint_y: None
+            height: self.minimum_height
+            padding: [0, 0, dp(10), dp(24)]
+            spacing: dp(18)
+    Label:
+        id: empty_label
+        text: ""
+        font_size: "15sp"
+        color: theme.C.muted
+        size_hint_y: None
+        height: dp(30) if self.text else 0
