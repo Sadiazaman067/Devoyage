@@ -1,10 +1,60 @@
 import os
+import sys
 import tempfile
+import types
 import unittest
 from unittest.mock import patch
-import controllers.portfolio as portfolioController
+import models
 from exceptions import ValidationError
 from models import db, intakes, roadmaps, users
+
+#temporary in-memory mock for models/portfolio.py until Sadia's PR merges
+fakeEntries={}
+nextEntryId=1
+
+def _resetFakePortfolio():
+    global fakeEntries, nextEntryId
+    fakeEntries={}
+    nextEntryId=1
+
+def _fakeAddEntry(conn, userId, entry):
+    global nextEntryId
+    entryId=nextEntryId
+    nextEntryId+=1
+    fakeEntries[entryId]={"id": entryId, "user_id": userId, **entry}
+    return entryId
+
+def _fakeListEntries(conn, userId, entry_type=None):
+    mine=[
+        dict(e) for e in fakeEntries.values()
+        if e["user_id"]==userId and (entry_type is None or e["entry_type"]==entry_type)
+    ]
+    return sorted(mine, key=lambda e: (e["start_date"], e["id"]), reverse=True)
+
+def _fakeUpdateEntry(conn, userId, entryId, entry):
+    existing=fakeEntries.get(entryId)
+    if existing is None or existing["user_id"]!=userId:
+        return False
+    existing.update(entry)
+    return True
+
+def _fakeDeleteEntry(conn, userId, entryId):
+    existing=fakeEntries.get(entryId)
+    if existing is None or existing["user_id"]!=userId:
+        return False
+    del fakeEntries[entryId]
+    return True
+
+if not hasattr(models, "portfolio"):
+    fakePortfolio=types.ModuleType("models.portfolio")
+    fakePortfolio.add_entry=_fakeAddEntry
+    fakePortfolio.list_entries=_fakeListEntries
+    fakePortfolio.update_entry=_fakeUpdateEntry
+    fakePortfolio.delete_entry=_fakeDeleteEntry
+    sys.modules["models.portfolio"]=fakePortfolio
+    models.portfolio=fakePortfolio
+
+import controllers.portfolio as portfolioController
 
 
 sampleIntake={
@@ -63,7 +113,9 @@ def makeEntryData(**overrides):
 class TestPortfolioController(unittest.TestCase):
 
     def setUp(self):
-        #create temp dir and db
+        _resetFakePortfolio()
+
+        #create temp dir and real db for users, intakes, and roadmaps
         self.tempDir=tempfile.TemporaryDirectory()
         self.dbPath=os.path.join(self.tempDir.name, "test_devoyage.db")
 
@@ -72,11 +124,9 @@ class TestPortfolioController(unittest.TestCase):
         conn=self.realGetConnection(self.dbPath)
         db.init_db(conn)
 
-        #create two users for isolation tests
         self.user1Id=users.create_user(conn, "user1@example.com", "fake_hash_1")
         self.user2Id=users.create_user(conn, "user2@example.com", "fake_hash_2")
 
-        #give user1 a roadmap so we can test step_id linking
         intakeId=intakes.save_intake(conn, self.user1Id, sampleIntake)
         roadmaps.create_roadmap(conn, self.user1Id, intakeId, sampleSteps, sampleNotNow)
         roadmap=roadmaps.get_current_roadmap(conn, self.user1Id)
@@ -199,7 +249,6 @@ class TestPortfolioController(unittest.TestCase):
                 makeEntryData(step_id=99999),
             )
 
-        #user2 has no roadmap, so linking user1's step must fail
         with self.assertRaises(ValidationError):
             portfolioController.add_portfolio_entry(
                 self.user2Id,
