@@ -165,3 +165,33 @@ def set_step_status(conn, step_id, status, user_id):
     )
     conn.commit()
     return cur.rowcount == 1
+
+
+def clear_roadmap_data(conn, user_id):
+    """Delete this user's roadmaps, steps and not-now items. Intake answers stay.
+
+    Portfolio entries are kept: any entry linked to one of the steps being
+    deleted just loses the link (step_id becomes NULL).
+    All-or-nothing: if anything fails, nothing is deleted.
+    """
+    roadmap_ids = "SELECT id FROM roadmaps WHERE user_id = ?"
+    try:
+        has_portfolio = conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='portfolio_entries'"
+        ).fetchone() is not None
+        if has_portfolio:
+            conn.execute(
+                f"""
+                UPDATE portfolio_entries SET step_id = NULL
+                WHERE user_id = ? AND step_id IN (
+                    SELECT id FROM roadmap_steps WHERE roadmap_id IN ({roadmap_ids}))
+                """,
+                (user_id, user_id),
+            )
+        conn.execute(f"DELETE FROM roadmap_steps WHERE roadmap_id IN ({roadmap_ids})", (user_id,))
+        conn.execute(f"DELETE FROM not_now_items WHERE roadmap_id IN ({roadmap_ids})", (user_id,))
+        conn.execute("DELETE FROM roadmaps WHERE user_id = ?", (user_id,))
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
