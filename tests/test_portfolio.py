@@ -1,63 +1,13 @@
 import os
-import sys
 import tempfile
-import types
 import unittest
 from unittest.mock import patch
-import models
+import controllers.portfolio as portfolioController
 from exceptions import ValidationError
 from models import db, intakes, roadmaps, users
 
-#temporary in-memory mock for models/portfolio.py until Sadia's PR merges
-fakeEntries={}
-nextEntryId=1
 
-def _resetFakePortfolio():
-    global fakeEntries, nextEntryId
-    fakeEntries={}
-    nextEntryId=1
-
-def _fakeAddEntry(conn, userId, entry):
-    global nextEntryId
-    entryId=nextEntryId
-    nextEntryId+=1
-    fakeEntries[entryId]={"id": entryId, "user_id": userId, **entry}
-    return entryId
-
-def _fakeListEntries(conn, userId, entry_type=None):
-    mine=[
-        dict(e) for e in fakeEntries.values()
-        if e["user_id"]==userId and (entry_type is None or e["entry_type"]==entry_type)
-    ]
-    return sorted(mine, key=lambda e: (e["start_date"], e["id"]), reverse=True)
-
-def _fakeUpdateEntry(conn, userId, entryId, entry):
-    existing=fakeEntries.get(entryId)
-    if existing is None or existing["user_id"]!=userId:
-        return False
-    existing.update(entry)
-    return True
-
-def _fakeDeleteEntry(conn, userId, entryId):
-    existing=fakeEntries.get(entryId)
-    if existing is None or existing["user_id"]!=userId:
-        return False
-    del fakeEntries[entryId]
-    return True
-
-if not hasattr(models, "portfolio"):
-    fakePortfolio=types.ModuleType("models.portfolio")
-    fakePortfolio.add_entry=_fakeAddEntry
-    fakePortfolio.list_entries=_fakeListEntries
-    fakePortfolio.update_entry=_fakeUpdateEntry
-    fakePortfolio.delete_entry=_fakeDeleteEntry
-    sys.modules["models.portfolio"]=fakePortfolio
-    models.portfolio=fakePortfolio
-
-import controllers.portfolio as portfolioController
-
-
-sampleIntake={
+sampleIntake = {
     "year": "sophomore",
     "major_status": "declared",
     "has_pipeline": "yes",
@@ -73,7 +23,7 @@ sampleIntake={
     "free_text": None,
 }
 
-sampleSteps=[
+sampleSteps = [
     {
         "title": "Build a CLI tool",
         "description": "Write a small Python CLI.",
@@ -88,7 +38,7 @@ sampleSteps=[
     },
 ]
 
-sampleNotNow=[
+sampleNotNow = [
     {
         "title": "Kubernetes",
         "reasoning": "Too early for current goals.",
@@ -96,9 +46,8 @@ sampleNotNow=[
 ]
 
 
-#helper to build a valid entry dict with optional overrides
 def makeEntryData(**overrides):
-    data={
+    data = {
         "entry_type": "project",
         "title": "Devoyage",
         "start_date": "2026-11-01",
@@ -113,29 +62,25 @@ def makeEntryData(**overrides):
 class TestPortfolioController(unittest.TestCase):
 
     def setUp(self):
-        _resetFakePortfolio()
+        self.tempDir = tempfile.TemporaryDirectory()
+        self.dbPath = os.path.join(self.tempDir.name, "test_devoyage.db")
 
-        #create temp dir and real db for users, intakes, and roadmaps
-        self.tempDir=tempfile.TemporaryDirectory()
-        self.dbPath=os.path.join(self.tempDir.name, "test_devoyage.db")
+        self.realGetConnection = db.get_connection
 
-        self.realGetConnection=db.get_connection
-
-        conn=self.realGetConnection(self.dbPath)
+        conn = self.realGetConnection(self.dbPath)
         db.init_db(conn)
 
-        self.user1Id=users.create_user(conn, "user1@example.com", "fake_hash_1")
-        self.user2Id=users.create_user(conn, "user2@example.com", "fake_hash_2")
+        self.user1Id = users.create_user(conn, "user1@example.com", "fake_hash_1")
+        self.user2Id = users.create_user(conn, "user2@example.com", "fake_hash_2")
 
-        intakeId=intakes.save_intake(conn, self.user1Id, sampleIntake)
-        roadmaps.create_roadmap(conn, self.user1Id, intakeId, sampleSteps, sampleNotNow)
-        roadmap=roadmaps.get_current_roadmap(conn, self.user1Id)
-        self.user1StepId=roadmap["steps"][0]["id"]
+        self.intakeId = intakes.save_intake(conn, self.user1Id, sampleIntake)
+        roadmaps.create_roadmap(conn, self.user1Id, self.intakeId, sampleSteps, sampleNotNow)
+        roadmap = roadmaps.get_current_roadmap(conn, self.user1Id)
+        self.user1StepId = roadmap["steps"][0]["id"]
 
         conn.close()
 
-        #redirect controller db calls to temp db
-        self.connectionPatcher=patch(
+        self.connectionPatcher = patch(
             "controllers.portfolio.db.get_connection",
             side_effect=self.getTestConnection,
         )
@@ -148,24 +93,22 @@ class TestPortfolioController(unittest.TestCase):
     def getTestConnection(self):
         return self.realGetConnection(self.dbPath)
 
-    #test adding a full valid entry with linked roadmap step
     def test_add_portfolio_entry_success(self):
-        entryId=portfolioController.add_portfolio_entry(
+        entryId = portfolioController.add_portfolio_entry(
             self.user1Id,
             makeEntryData(step_id=self.user1StepId),
         )
 
         self.assertIsInstance(entryId, int)
 
-        entries=portfolioController.list_portfolio_entries(self.user1Id)
+        entries = portfolioController.list_portfolio_entries(self.user1Id)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0]["id"], entryId)
         self.assertEqual(entries[0]["title"], "Devoyage")
         self.assertEqual(entries[0]["step_id"], self.user1StepId)
 
-    #test adding entry with only required fields and stripped whitespace
     def test_add_portfolio_entry_minimal_fields(self):
-        entryId=portfolioController.add_portfolio_entry(
+        entryId = portfolioController.add_portfolio_entry(
             self.user1Id,
             {
                 "entry_type": "course",
@@ -175,13 +118,12 @@ class TestPortfolioController(unittest.TestCase):
         )
 
         self.assertIsInstance(entryId, int)
-        entries=portfolioController.list_portfolio_entries(self.user1Id)
+        entries = portfolioController.list_portfolio_entries(self.user1Id)
         self.assertEqual(entries[0]["title"], "CSC 317")
         self.assertIsNone(entries[0]["link"])
         self.assertIsNone(entries[0]["note"])
         self.assertIsNone(entries[0]["step_id"])
 
-    #test invalid entry_type fails
     def test_add_portfolio_entry_rejects_invalid_type(self):
         with self.assertRaises(ValidationError):
             portfolioController.add_portfolio_entry(
@@ -189,7 +131,6 @@ class TestPortfolioController(unittest.TestCase):
                 makeEntryData(entry_type="blog"),
             )
 
-    #test blank or >120 char title fails
     def test_add_portfolio_entry_rejects_empty_or_long_title(self):
         with self.assertRaises(ValidationError):
             portfolioController.add_portfolio_entry(
@@ -200,10 +141,9 @@ class TestPortfolioController(unittest.TestCase):
         with self.assertRaises(ValidationError):
             portfolioController.add_portfolio_entry(
                 self.user1Id,
-                makeEntryData(title="a"*121),
+                makeEntryData(title="a" * 121),
             )
 
-    #test bad date format or impossible date fails
     def test_add_portfolio_entry_rejects_invalid_date(self):
         with self.assertRaises(ValidationError):
             portfolioController.add_portfolio_entry(
@@ -217,7 +157,6 @@ class TestPortfolioController(unittest.TestCase):
                 makeEntryData(start_date="2026-02-30"),
             )
 
-    #test link without http:// or https:// fails
     def test_add_portfolio_entry_rejects_invalid_link(self):
         with self.assertRaises(ValidationError):
             portfolioController.add_portfolio_entry(
@@ -225,15 +164,15 @@ class TestPortfolioController(unittest.TestCase):
                 makeEntryData(link="github.com/example/repo"),
             )
 
-    #test note over 500 chars fails
     def test_add_portfolio_entry_rejects_long_note(self):
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ValidationError) as ctx:
             portfolioController.add_portfolio_entry(
                 self.user1Id,
-                makeEntryData(note="x"*501),
+                makeEntryData(note="x" * 501),
             )
 
-    #test bool step_id is rejected
+        self.assertEqual(str(ctx.exception), "Note must be 500 characters or fewer.")
+
     def test_add_portfolio_entry_rejects_bool_step_id(self):
         with self.assertRaises(ValidationError):
             portfolioController.add_portfolio_entry(
@@ -241,7 +180,6 @@ class TestPortfolioController(unittest.TestCase):
                 makeEntryData(step_id=True),
             )
 
-    #test step_id must belong to the user's current roadmap
     def test_add_portfolio_entry_rejects_step_not_in_current_roadmap(self):
         with self.assertRaises(ValidationError):
             portfolioController.add_portfolio_entry(
@@ -255,7 +193,6 @@ class TestPortfolioController(unittest.TestCase):
                 makeEntryData(step_id=self.user1StepId),
             )
 
-    #test newest start_date first, then newest id
     def test_list_portfolio_entries_orders_by_newest_date_then_id(self):
         portfolioController.add_portfolio_entry(
             self.user1Id,
@@ -270,12 +207,11 @@ class TestPortfolioController(unittest.TestCase):
             makeEntryData(title="Same Day 2", start_date="2026-10-01"),
         )
 
-        entries=portfolioController.list_portfolio_entries(self.user1Id)
-        titles=[e["title"] for e in entries]
+        entries = portfolioController.list_portfolio_entries(self.user1Id)
+        titles = [e["title"] for e in entries]
 
         self.assertEqual(titles, ["Same Day 2", "Same Day 1", "Older"])
 
-    #test filtering by entry_type and user isolation
     def test_list_portfolio_entries_filters_by_type_and_isolates_users(self):
         portfolioController.add_portfolio_entry(
             self.user1Id,
@@ -290,22 +226,20 @@ class TestPortfolioController(unittest.TestCase):
             makeEntryData(entry_type="project", title="User2 Project"),
         )
 
-        user1Projects=portfolioController.list_portfolio_entries(self.user1Id, entry_type="project")
+        user1Projects = portfolioController.list_portfolio_entries(self.user1Id, entry_type="project")
         self.assertEqual(len(user1Projects), 1)
         self.assertEqual(user1Projects[0]["title"], "User1 Project")
 
-        user2All=portfolioController.list_portfolio_entries(self.user2Id)
+        user2All = portfolioController.list_portfolio_entries(self.user2Id)
         self.assertEqual(len(user2All), 1)
         self.assertEqual(user2All[0]["title"], "User2 Project")
 
-    #test unknown entry_type filter raises ValidationError
     def test_list_portfolio_entries_rejects_unknown_type(self):
         with self.assertRaises(ValidationError):
             portfolioController.list_portfolio_entries(self.user1Id, entry_type="unknown")
 
-    #test updating an entry changes all fields
     def test_update_portfolio_entry_updates_fields(self):
-        entryId=portfolioController.add_portfolio_entry(
+        entryId = portfolioController.add_portfolio_entry(
             self.user1Id,
             makeEntryData(title="Original"),
         )
@@ -323,7 +257,7 @@ class TestPortfolioController(unittest.TestCase):
             ),
         )
 
-        entries=portfolioController.list_portfolio_entries(self.user1Id)
+        entries = portfolioController.list_portfolio_entries(self.user1Id)
         self.assertEqual(entries[0]["entry_type"], "hackathon")
         self.assertEqual(entries[0]["title"], "Updated Title")
         self.assertEqual(entries[0]["start_date"], "2026-11-15")
@@ -331,9 +265,28 @@ class TestPortfolioController(unittest.TestCase):
         self.assertEqual(entries[0]["note"], "Won 1st place.")
         self.assertEqual(entries[0]["step_id"], self.user1StepId)
 
-    #test updating another user's entry or nonexistent id raises ValidationError
+    def test_update_portfolio_entry_keeps_old_step_after_roadmap_regenerate(self):
+        entryId = portfolioController.add_portfolio_entry(
+            self.user1Id,
+            makeEntryData(title="Before Regenerate", step_id=self.user1StepId),
+        )
+
+        conn = self.getTestConnection()
+        roadmaps.create_roadmap(conn, self.user1Id, self.intakeId, sampleSteps, sampleNotNow)
+        conn.close()
+
+        portfolioController.update_portfolio_entry(
+            self.user1Id,
+            entryId,
+            makeEntryData(title="After Regenerate", step_id=self.user1StepId),
+        )
+
+        entries = portfolioController.list_portfolio_entries(self.user1Id)
+        self.assertEqual(entries[0]["title"], "After Regenerate")
+        self.assertEqual(entries[0]["step_id"], self.user1StepId)
+
     def test_update_portfolio_entry_not_found_or_wrong_user_raises(self):
-        entryId=portfolioController.add_portfolio_entry(self.user1Id, makeEntryData())
+        entryId = portfolioController.add_portfolio_entry(self.user1Id, makeEntryData())
 
         with self.assertRaises(ValidationError):
             portfolioController.update_portfolio_entry(
@@ -349,18 +302,16 @@ class TestPortfolioController(unittest.TestCase):
                 makeEntryData(),
             )
 
-    #test deleting an entry removes it from db
     def test_delete_portfolio_entry_removes_entry(self):
-        entryId=portfolioController.add_portfolio_entry(self.user1Id, makeEntryData())
+        entryId = portfolioController.add_portfolio_entry(self.user1Id, makeEntryData())
 
         portfolioController.delete_portfolio_entry(self.user1Id, entryId)
 
-        entries=portfolioController.list_portfolio_entries(self.user1Id)
+        entries = portfolioController.list_portfolio_entries(self.user1Id)
         self.assertEqual(entries, [])
 
-    #test deleting another user's entry or nonexistent id raises ValidationError
     def test_delete_portfolio_entry_not_found_or_wrong_user_raises(self):
-        entryId=portfolioController.add_portfolio_entry(self.user1Id, makeEntryData())
+        entryId = portfolioController.add_portfolio_entry(self.user1Id, makeEntryData())
 
         with self.assertRaises(ValidationError):
             portfolioController.delete_portfolio_entry(self.user2Id, entryId)
@@ -369,5 +320,5 @@ class TestPortfolioController(unittest.TestCase):
             portfolioController.delete_portfolio_entry(self.user1Id, 99999)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     unittest.main()
