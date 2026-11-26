@@ -39,9 +39,14 @@ def init_db(conn):
     the sibling modules here (not at the top of the file) avoids a circular
     import, since users/intakes/roadmaps don't need to import db.py at all.
     """
-    from models import users, intakes, roadmaps
+    from models import users, intakes, roadmaps, portfolio, career_paths, resources
 
     users.create_table(conn)
     intakes.create_table(conn)
     roadmaps.create_table(conn)  # also creates roadmap_steps + not_now_items
+    portfolio.create_table(conn)
+    career_paths.create_table(conn)
+    resources.create_table(conn)
+    career_paths.seed(conn)
+    resources.seed(conn)
     conn.commit()
