@@ -172,7 +172,10 @@
 <FocusItem>:
     orientation: "horizontal"
     size_hint_y: None
-    height: dp(72)
+    # natural_height fits the whole title. In the side-by-side layout the
+    # view sets row_height so all three items match the tallest one.
+    natural_height: max(dp(72), focus_title.height + dp(28))
+    height: self.row_height or self.natural_height
     padding: [dp(16), 0]
     spacing: dp(12)
     canvas.before:
@@ -198,10 +201,11 @@
         font_size: "15sp"
         color: theme.C.muted if root.done else theme.C.ink
         strikethrough: root.done
-        # Two lines at most, so every Weekly Focus card is the same height.
-        text_size: self.size
-        valign: "middle"
-        max_lines: 2
+        # Wraps to as many lines as the title needs; the item grows to fit.
+        text_size: self.width, None
+        size_hint_y: None
+        height: self.texture_size[1]
+        pos_hint: {"center_y": 0.5}
 
 # One roadmap step: checkbox, title, description, time chip, expand arrow.
 # The "Why this, why now" box is added and removed by StepRow.on_expanded.
@@ -432,7 +436,7 @@
                     id: focus_box
                     orientation: "vertical" if root.stacked else "horizontal"
                     size_hint_y: None
-                    height: self.minimum_height if root.stacked else dp(72)
+                    height: self.minimum_height if root.stacked else root.focus_row_height
                     spacing: dp(14)
 
             Card:
