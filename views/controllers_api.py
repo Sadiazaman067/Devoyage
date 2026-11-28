@@ -7,8 +7,8 @@ can check, and it means switching from the dev stubs to Arnav's real
 controllers is a change to this file only -- no screen file changes.
 
 Which block is active (switched 11/11, after #10, #14 and #15 merged):
-  - B, the real controllers, is ACTIVE. auth, intake, and roadmap are all
-    on main and match the contract.
+  - B, the real controllers, is ACTIVE. Every controller is on main and
+    matches the contract (Tier 2 content and portfolio since #24 and #25).
   - A, the dev stubs, stays here commented out. To run the app without
     the AI key or a real database (for example, to work on layout), comment
     out B and uncomment A.
@@ -43,27 +43,14 @@ from controllers.settings import (
 )
 from controllers.roadmap import get_weekly_focus
 
-# Career Paths + Resources Hub. TEMPORARY try/except: Arnav's
-# controllers/content.py isn't on main yet. Until it is, the stand-ins in
-# dev_stubs/content_stub.py fill in. After it merges, keep only the import.
-try:
-    from controllers.content import list_career_paths, list_resources
-except ImportError:
-    from dev_stubs.content_stub import list_career_paths, list_resources
+# Career Paths + Resources Hub (Arnav, #24)
+from controllers.content import list_career_paths, list_resources
 
-# Portfolio Log. TEMPORARY try/except, same reason: Arnav's
-# controllers/portfolio.py isn't on main yet. After it merges, keep only
-# the import.
-try:
-    from controllers.portfolio import (
-        add_portfolio_entry, list_portfolio_entries,
-        update_portfolio_entry, delete_portfolio_entry,
-    )
-except ImportError:
-    from dev_stubs.portfolio_stub import (
-        add_portfolio_entry, list_portfolio_entries,
-        update_portfolio_entry, delete_portfolio_entry,
-    )
+# Portfolio Log (Arnav, #24)
+from controllers.portfolio import (
+    add_portfolio_entry, list_portfolio_entries,
+    update_portfolio_entry, delete_portfolio_entry,
+)
 
 __all__ = [
     "sign_up",
