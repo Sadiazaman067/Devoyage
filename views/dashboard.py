@@ -126,6 +126,8 @@ class FocusItem(BoxLayout):
     title = StringProperty("")
     done = BooleanProperty(False)
     screen = ObjectProperty(None)
+    natural_height = NumericProperty(0)  # height that fits the whole title
+    row_height = NumericProperty(0)      # 0 = use natural_height
 
 
 class StepRow(BoxLayout):
@@ -199,9 +201,22 @@ class DashboardRoadmapView(ScrollView):
     stacked = BooleanProperty(False)
     screen = ObjectProperty(None)
     focus_subtitle = StringProperty("")
+    focus_row_height = NumericProperty(dp(72))
     progress = NumericProperty(0)
     progress_markup = StringProperty("")
     percent_text = StringProperty("")
+
+    def on_stacked(self, *args):
+        self._fit_focus_row()
+
+    def _fit_focus_row(self, *args):
+        """Side by side, every Weekly Focus item takes the tallest one's
+        height so the row lines up. Stacked, each keeps its own height."""
+        items = list(self.ids.focus_box.children) if "focus_box" in self.ids else []
+        tallest = max([dp(72)] + [item.natural_height for item in items])
+        self.focus_row_height = tallest
+        for item in items:
+            item.row_height = 0 if self.stacked else tallest
 
     def show(self, roadmap, expanded_ids):
         steps = roadmap.get("steps") or []
@@ -230,12 +245,15 @@ class DashboardRoadmapView(ScrollView):
             else:
                 self.focus_subtitle = "Nothing to focus on yet."
         for step in focus:
-            focus_box.add_widget(FocusItem(
+            item = FocusItem(
                 step_id=step.get("id"),
                 title=step.get("title", ""),
                 done=False,
                 screen=self.screen,
-            ))
+            )
+            item.bind(natural_height=self._fit_focus_row)
+            focus_box.add_widget(item)
+        self._fit_focus_row()
 
         # ---- Roadmap steps, in the order the controller returned them ----
         steps_box = self.ids.steps_box

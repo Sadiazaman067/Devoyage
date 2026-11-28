@@ -15,6 +15,21 @@ registers the fonts and the shared widgets (Card, buttons, Sidebar) that
 the screens' .kv files use. Signed-in pages all show the same sidebar, so
 screens fade instead of sliding (a sliding sidebar looks broken).
 """
+from kivy.config import Config
+
+# Window size, set before kivy.core.window is imported (that import opens the
+# window). Kivy's default is 800x600, which squeezes every screen.
+# - Open maximized, so the window fits whatever screen it's on, with the
+#   title bar and taskbar still showing.
+# - width/height is the size it restores to if un-maximized.
+# - The minimum fits a 1280x720 screen (e.g. a 1080p laptop at 150% scaling)
+#   and is the smallest size every screen was checked at.
+Config.set("graphics", "window_state", "maximized")
+Config.set("graphics", "width", "1100")
+Config.set("graphics", "height", "640")
+Config.set("graphics", "minimum_width", "1100")
+Config.set("graphics", "minimum_height", "600")
+
 from kivy.app import App
 from kivy.core.window import Window
 from models import db

@@ -71,186 +71,196 @@
         Rectangle:
             pos: self.pos
             size: self.size
-    BoxLayout:
-        orientation: "vertical"
-        padding: [dp(56), dp(24), dp(56), dp(32)]
-        spacing: dp(28)
-
-        # ---- Top bar ----
+    ScrollView:
+        do_scroll_x: False
+        bar_width: dp(6)
+        bar_color: theme.C.checkbox
+        bar_inactive_color: theme.C.line
         BoxLayout:
+            orientation: "vertical"
+            # Fills the window when it is tall enough. In a short window the
+            # page keeps this height and scrolls instead of squeezing the hero
+            # into the top bar.
             size_hint_y: None
-            height: dp(48)
-            spacing: dp(12)
-            Icon:
-                name: "compass"
-                font_size: "26sp"
-                size: dp(30), dp(30)
-                pos_hint: {"center_y": 0.5}
-            Label:
-                text: "Devoyage"
-                bold: True
-                font_size: "22sp"
-                color: theme.C.ink
-                size_hint_x: None
-                width: self.texture_size[0]
-            Widget:
-            GhostButton:
-                text: "Log in"
-                pos_hint: {"center_y": 0.5}
-                on_release: root.go_to_login()
-            PrimaryButton:
-                text: "Get started"
-                pos_hint: {"center_y": 0.5}
-                on_release: root.go_to_signup()
+            height: max(root.height, dp(700))
+            padding: [dp(56), dp(24), dp(56), dp(32)]
+            spacing: dp(28)
 
-        # ---- Hero ----
-        BoxLayout:
-            spacing: dp(48)
+            # ---- Top bar ----
             BoxLayout:
-                orientation: "vertical"
-                spacing: dp(18)
-                Widget:
-                Chip:
-                    text: "For CS students who don't know what to do next"
-                    fill: theme.C.mint
-                    color: theme.C.mint_ink
+                size_hint_y: None
+                height: dp(48)
+                spacing: dp(12)
+                Icon:
+                    name: "compass"
+                    font_size: "26sp"
+                    size: dp(30), dp(30)
+                    pos_hint: {"center_y": 0.5}
                 Label:
-                    markup: True
-                    text: "Your CS semester,\n[i][color=166088]mapped out.[/color][/i]"
-                    font_name: "Lora"
-                    font_size: "56sp"
-                    line_height: 1.0
+                    text: "Devoyage"
+                    bold: True
+                    font_size: "22sp"
                     color: theme.C.ink
-                    text_size: self.width, None
-                    size_hint_y: None
-                    height: self.texture_size[1]
-                Label:
-                    text: "Answer a 5-minute questionnaire and get a roadmap built around your classes, your skills, and the hours you actually have."
-                    font_size: "18sp"
-                    color: theme.C.muted
-                    line_height: 1.3
-                    text_size: self.width, None
-                    size_hint_y: None
-                    height: self.texture_size[1]
-                BoxLayout:
-                    size_hint_y: None
-                    height: dp(52)
-                    spacing: dp(14)
-                    PrimaryButton:
-                        text: "Get started"
-                        icon_name: "arrow-right"
-                        icon_right: True
-                        height: dp(52)
-                        on_release: root.go_to_signup()
-                    GhostButton:
-                        text: "I have an account"
-                        height: dp(52)
-                        on_release: root.go_to_login()
-                    Widget:
+                    size_hint_x: None
+                    width: self.texture_size[0]
                 Widget:
+                GhostButton:
+                    text: "Log in"
+                    pos_hint: {"center_y": 0.5}
+                    on_release: root.go_to_login()
+                PrimaryButton:
+                    text: "Get started"
+                    pos_hint: {"center_y": 0.5}
+                    on_release: root.go_to_signup()
 
-            # A drawing of the dashboard, not a screenshot: it never goes stale.
-            AnchorLayout:
-                size_hint_x: 0.95
-                Card:
-                    size_hint_y: None
-                    height: dp(380)
-                    bg_color: theme.C.sidebar
-                    radius: 22
-                    padding: dp(22)
-                    spacing: dp(14)
-                    Card:
-                        size_hint_x: None
-                        width: dp(70)
-                        radius: 12
+            # ---- Hero ----
+            BoxLayout:
+                spacing: dp(48)
+                BoxLayout:
+                    orientation: "vertical"
+                    spacing: dp(18)
+                    Widget:
+                    Chip:
+                        text: "For CS students who don't know what to do next"
+                        fill: theme.C.mint
+                        color: theme.C.mint_ink
+                    Label:
+                        markup: True
+                        text: "Your CS semester,\n[i][color=166088]mapped out.[/color][/i]"
+                        font_name: "Lora"
+                        font_size: "56sp"
+                        line_height: 1.0
+                        color: theme.C.ink
+                        text_size: self.width, None
+                        size_hint_y: None
+                        height: self.texture_size[1]
+                    Label:
+                        text: "Answer a 5-minute questionnaire and get a roadmap built around your classes, your skills, and the hours you actually have."
+                        font_size: "18sp"
+                        color: theme.C.muted
+                        line_height: 1.3
+                        text_size: self.width, None
+                        size_hint_y: None
+                        height: self.texture_size[1]
                     BoxLayout:
-                        orientation: "vertical"
+                        size_hint_y: None
+                        height: dp(52)
+                        spacing: dp(14)
+                        PrimaryButton:
+                            text: "Get started"
+                            icon_name: "arrow-right"
+                            icon_right: True
+                            height: dp(52)
+                            on_release: root.go_to_signup()
+                        GhostButton:
+                            text: "I have an account"
+                            height: dp(52)
+                            on_release: root.go_to_login()
+                        Widget:
+                    Widget:
+
+                # A drawing of the dashboard, not a screenshot: it never goes stale.
+                AnchorLayout:
+                    size_hint_x: 0.95
+                    Card:
+                        size_hint_y: None
+                        height: dp(380)
+                        bg_color: theme.C.sidebar
+                        radius: 22
+                        padding: dp(22)
                         spacing: dp(14)
                         Card:
-                            orientation: "vertical"
-                            size_hint_y: 0.32
+                            size_hint_x: None
+                            width: dp(70)
                             radius: 12
-                            bg_color: theme.C.mint_soft
-                            border_color: theme.C.mint_line
-                            padding: [dp(16), dp(12)]
-                            spacing: dp(8)
-                            Label:
-                                text: "Weekly Focus"
-                                font_name: "InterSemiBold"
-                                font_size: "14sp"
-                                color: theme.C.ink
-                                text_size: self.size
-                                halign: "left"
-                                valign: "middle"
-                            SketchBar:
-                                fill: theme.C.mint_line
-                                size_hint_x: 0.7
-                            SketchBar:
-                                fill: theme.C.mint_line
-                                size_hint_x: 0.5
                         BoxLayout:
+                            orientation: "vertical"
                             spacing: dp(14)
                             Card:
                                 orientation: "vertical"
+                                size_hint_y: 0.32
                                 radius: 12
-                                padding: [dp(16), dp(16)]
-                                spacing: dp(12)
-                                SketchRow:
-                                SketchRow:
-                                SketchRow:
-                                SketchRow:
-                                SketchRow:
-                                Widget:
-                            Card:
-                                orientation: "vertical"
-                                size_hint_x: 0.65
-                                radius: 12
-                                bg_color: theme.C.crimson_tint
-                                border_color: theme.C.danger_border
+                                bg_color: theme.C.mint_soft
+                                border_color: theme.C.mint_line
                                 padding: [dp(16), dp(12)]
-                                spacing: dp(12)
+                                spacing: dp(8)
                                 Label:
-                                    text: "Not Now"
+                                    text: "Weekly Focus"
                                     font_name: "InterSemiBold"
                                     font_size: "14sp"
-                                    color: theme.C.crimson
-                                    size_hint_y: None
-                                    height: dp(20)
+                                    color: theme.C.ink
                                     text_size: self.size
                                     halign: "left"
                                     valign: "middle"
                                 SketchBar:
-                                    fill: theme.C.notnow_divider
+                                    fill: theme.C.mint_line
+                                    size_hint_x: 0.7
                                 SketchBar:
-                                    fill: theme.C.notnow_divider
-                                SketchBar:
-                                    fill: theme.C.notnow_divider
-                                Widget:
+                                    fill: theme.C.mint_line
+                                    size_hint_x: 0.5
+                            BoxLayout:
+                                spacing: dp(14)
+                                Card:
+                                    orientation: "vertical"
+                                    radius: 12
+                                    padding: [dp(16), dp(16)]
+                                    spacing: dp(12)
+                                    SketchRow:
+                                    SketchRow:
+                                    SketchRow:
+                                    SketchRow:
+                                    SketchRow:
+                                    Widget:
+                                Card:
+                                    orientation: "vertical"
+                                    size_hint_x: 0.65
+                                    radius: 12
+                                    bg_color: theme.C.crimson_tint
+                                    border_color: theme.C.danger_border
+                                    padding: [dp(16), dp(12)]
+                                    spacing: dp(12)
+                                    Label:
+                                        text: "Not Now"
+                                        font_name: "InterSemiBold"
+                                        font_size: "14sp"
+                                        color: theme.C.crimson
+                                        size_hint_y: None
+                                        height: dp(20)
+                                        text_size: self.size
+                                        halign: "left"
+                                        valign: "middle"
+                                    SketchBar:
+                                        fill: theme.C.notnow_divider
+                                    SketchBar:
+                                        fill: theme.C.notnow_divider
+                                    SketchBar:
+                                        fill: theme.C.notnow_divider
+                                    Widget:
 
-        # ---- Features ----
-        BoxLayout:
-            size_hint_y: None
-            height: dp(150)
-            padding: [0, dp(24), 0, 0]
-            canvas.before:
-                Color:
-                    rgba: theme.C.line
-                Rectangle:
-                    pos: self.x, self.top - dp(1)
-                    size: self.width, dp(1)
-            FeatureTile:
-                icon_name: "map"
-                title: "Personalized roadmap"
-                body: "5 to 9 steps for your semester, based on your classes, skills, and hours."
-            FeatureTile:
-                icon_name: "eye-off"
-                title: 'A "Not now" list'
-                body: "What to skip for now, and why, so you stop doing everything at once."
-            FeatureTile:
-                icon_name: "chart-column"
-                title: "Track your progress"
-                body: "Check off steps and watch your weekly focus move forward."
-            FeatureTile:
-                icon_name: "list"
-                title: "Portfolio log"
-                body: "Keep a record of projects, courses, and hackathons for your resume."
+            # ---- Features ----
+            BoxLayout:
+                size_hint_y: None
+                height: dp(150)
+                padding: [0, dp(24), 0, 0]
+                canvas.before:
+                    Color:
+                        rgba: theme.C.line
+                    Rectangle:
+                        pos: self.x, self.top - dp(1)
+                        size: self.width, dp(1)
+                FeatureTile:
+                    icon_name: "map"
+                    title: "Personalized roadmap"
+                    body: "5 to 9 steps for your semester, based on your classes, skills, and hours."
+                FeatureTile:
+                    icon_name: "eye-off"
+                    title: 'A "Not now" list'
+                    body: "What to skip for now, and why, so you stop doing everything at once."
+                FeatureTile:
+                    icon_name: "chart-column"
+                    title: "Track your progress"
+                    body: "Check off steps and watch your weekly focus move forward."
+                FeatureTile:
+                    icon_name: "list"
+                    title: "Portfolio log"
+                    body: "Keep a record of projects, courses, and hackathons for your resume."
