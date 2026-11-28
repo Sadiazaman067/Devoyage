@@ -73,6 +73,9 @@ Requirements:
 - Explain recommendations using their actual skills, coursework, and commitments.
 - Every reasoning field must reference concrete facts from the student's intake where relevant, such as skills, coursework, workload, or goals.
 - Do not invent experiences or qualifications not stated in the intake.
+- Keep every est_time value to at most 4 words, such as "4-6 weeks" or "2 weeks".
+- Limit every reasoning field to at most 2 concise sentences, including both steps and not_now items.
+- Avoid paragraphs, repetition, and unnecessary details in reasoning.
 
 
 Return this JSON structure:
